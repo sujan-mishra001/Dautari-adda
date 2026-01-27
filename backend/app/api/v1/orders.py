@@ -9,7 +9,7 @@ from datetime import datetime
 
 from app.database import get_db
 from app.dependencies import get_current_user
-from app.models import Order, OrderItem, KOT, KOTItem, Table
+from app.models import Order, OrderItem, KOT, KOTItem, Table, Customer
 from app.schemas import OrderResponse
 
 router = APIRouter()
@@ -79,6 +79,10 @@ async def create_order(
         discount = order_data.get('discount', 0)
         order_data['net_amount'] = order_data['gross_amount'] - discount
     
+    # Sync total_amount with net_amount for consistency
+    if 'total_amount' not in order_data or order_data.get('total_amount') == 0:
+        order_data['total_amount'] = order_data.get('net_amount', 0)
+    
     new_order = Order(**order_data)
     db.add(new_order)
     db.flush() # Get ID before adding items
@@ -101,6 +105,15 @@ async def create_order(
         if table:
             table.status = "Occupied"
     
+    # Update customer stats if Paid
+    if new_order.status in ['Paid', 'Completed'] and new_order.customer_id:
+        customer = db.query(Customer).filter(Customer.id == new_order.customer_id).first()
+        if customer:
+            customer.total_visits += 1
+            customer.total_spent += new_order.net_amount
+            customer.due_amount += new_order.credit_amount
+            customer.updated_at = datetime.utcnow()
+
     db.commit()
     db.refresh(new_order)
     
@@ -135,23 +148,44 @@ async def update_order(
     # Recalculate net amount if gross or discount changed
     if 'gross_amount' in order_data or 'discount' in order_data:
         order.net_amount = order.gross_amount - order.discount
+        order.total_amount = order.net_amount
     
-    # Update table status based on order status
-    if 'status' in order_data and order.table_id:
-        table = db.query(Table).filter(Table.id == order.table_id).first()
-        if table:
-            new_status = order_data['status']
-            if new_status in ['Paid', 'Completed']:
-                # Reset table to Available when order is paid/completed
-                table.status = "Available"
-            elif new_status == 'Cancelled':
-                # Reset table to Available when order is cancelled
-                table.status = "Available"
-            elif new_status == 'BillRequested':
-                # Set table to BillRequested
+    # Handle KOT status when order status changes
+    if 'status' in order_data:
+        new_status = order_data['status']
+        if new_status in ['Paid', 'Completed']:
+            # Mark all associated KOTs as Served when payment is done
+            db.query(KOT).filter(KOT.order_id == order.id).update({"status": "Served"})
+            
+            # Update table status if applicable
+            if order.table_id:
+                table = db.query(Table).filter(Table.id == order.table_id).first()
+                if table:
+                    table.status = "Available"
+            
+            # Update customer stats if applicable
+            if order.customer_id:
+                customer = db.query(Customer).filter(Customer.id == order.customer_id).first()
+                if customer:
+                    customer.total_visits += 1
+                    customer.total_spent += order.net_amount
+                    customer.due_amount += order.credit_amount
+                    customer.updated_at = datetime.utcnow()
+                    
+        elif new_status == 'Cancelled':
+            # Optionally mark KOTs as Cancelled too? The user didn't ask, but it makes sense.
+            # However, I'll stick to 'Served' for payment as requested.
+            if order.table_id:
+                table = db.query(Table).filter(Table.id == order.table_id).first()
+                if table:
+                    table.status = "Available"
+        elif new_status == 'BillRequested' and order.table_id:
+            table = db.query(Table).filter(Table.id == order.table_id).first()
+            if table:
                 table.status = "BillRequested"
-            elif new_status in ['Pending', 'In Progress']:
-                # Keep table occupied
+        elif new_status in ['Pending', 'In Progress'] and order.table_id:
+            table = db.query(Table).filter(Table.id == order.table_id).first()
+            if table:
                 table.status = "Occupied"
     
     db.commit()

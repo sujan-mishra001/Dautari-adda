@@ -11,7 +11,8 @@ import {
     TextField,
     Stack,
     Alert,
-    Chip
+    Chip,
+    Snackbar
 } from '@mui/material';
 import {
     ArrowLeft,
@@ -21,7 +22,8 @@ import {
     CreditCard,
     Smartphone,
     Printer,
-    CheckCircle2
+    CheckCircle2,
+    UserCircle
 } from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ordersAPI, tablesAPI, settingsAPI } from '../../../services/api';
@@ -39,6 +41,7 @@ const Billing: React.FC = () => {
     const [selectedPaymentMode, setSelectedPaymentMode] = useState('Cash');
     const [paidAmount, setPaidAmount] = useState<number>(0);
     const [currentTime, setCurrentTime] = useState(new Date());
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -101,19 +104,16 @@ const Billing: React.FC = () => {
                 credit_amount: Math.max(0, order.net_amount - paidAmount)
             });
 
-            // 2. Update Table Status to Vacant
-            if (table) {
-                await tablesAPI.update(table.id, {
-                    ...table,
-                    status: 'Vacant'
-                });
-            }
+            // 2. Table status and KOT status are now handled by the backend 
+            // when the order status is updated to 'Paid'.
 
-            alert("Payment successful! Table is now vacant.");
-            navigate('/pos');
+            setSnackbar({ open: true, message: "Payment successful! Order completed and KOTs marked as served.", severity: 'success' });
+            setTimeout(() => {
+                navigate('/pos');
+            }, 1000);
         } catch (error) {
             console.error("Error processing payment:", error);
-            alert("Failed to process payment");
+            setSnackbar({ open: true, message: "Failed to process payment", severity: 'error' });
         } finally {
             setLoading(false);
         }
@@ -155,9 +155,22 @@ const Billing: React.FC = () => {
                 </IconButton>
                 <Box>
                     <Typography variant="h5" fontWeight={900} color="#1e293b">Settlement & Billing</Typography>
-                    <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
-                        {table?.hold_table_name || `TABLE ${table?.table_id}`} • {formatTime(currentTime)}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
+                            {table?.hold_table_name || `TABLE ${table?.table_id}`} • {formatTime(currentTime)}
+                        </Typography>
+                        {order?.customer && (
+                            <>
+                                <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: '#94a3b8' }} />
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <UserCircle size={14} color="#FF8C00" />
+                                    <Typography variant="caption" sx={{ color: '#FF8C00', fontWeight: 800 }}>
+                                        {order.customer.name}
+                                    </Typography>
+                                </Box>
+                            </>
+                        )}
+                    </Box>
                 </Box>
             </Box>
 
@@ -363,6 +376,21 @@ const Billing: React.FC = () => {
                     </Paper>
                 </Grid>
             </Grid>
+            {/* Snackbar Notifications */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={4000}
+                onClose={() => setSnackbar({ ...snackbar, open: false })}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert
+                    onClose={() => setSnackbar({ ...snackbar, open: false })}
+                    severity={snackbar.severity}
+                    sx={{ width: '100%' }}
+                >
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

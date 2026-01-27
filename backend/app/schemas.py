@@ -185,6 +185,9 @@ class CustomerResponse(BaseModel):
     email: Optional[str] = None
     address: Optional[str] = None
     customer_type: str
+    total_spent: float
+    total_visits: int
+    due_amount: float
     created_at: datetime
     updated_at: datetime
 
@@ -195,9 +198,10 @@ class CustomerResponse(BaseModel):
 # ============ Menu Schemas ============
 class CategoryCreate(BaseModel):
     name: str
-    type: str  # KOT or BOT
+    type: str = "KOT"  # Default to KOT
     image: Optional[str] = None
-    status: str = "Active"
+    description: Optional[str] = None
+    is_active: bool = True
 
 
 class CategoryResponse(BaseModel):
@@ -205,7 +209,8 @@ class CategoryResponse(BaseModel):
     name: str
     type: str
     image: Optional[str] = None
-    status: str
+    description: Optional[str] = None
+    is_active: bool
     created_at: datetime
 
     class Config:
@@ -216,7 +221,21 @@ class MenuGroupCreate(BaseModel):
     name: str
     category_id: int
     image: Optional[str] = None
-    status: str = "Active"
+    description: Optional[str] = None
+    is_active: bool = True
+
+
+class MenuGroupResponse(BaseModel):
+    id: int
+    name: str
+    category_id: int
+    image: Optional[str] = None
+    description: Optional[str] = None
+    is_active: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
 class MenuItemCreate(BaseModel):
@@ -225,9 +244,28 @@ class MenuItemCreate(BaseModel):
     group_id: Optional[int] = None
     price: float
     image: Optional[str] = None
+    description: Optional[str] = None
     inventory_tracking: bool = False
-    kot_bot: str  # KOT or BOT
-    status: str = "Active"
+    kot_bot: str = "KOT"
+    is_active: bool = True
+
+
+class MenuItemResponse(BaseModel):
+    id: int
+    name: str
+    category_id: int
+    group_id: Optional[int] = None
+    price: float
+    image: Optional[str] = None
+    description: Optional[str] = None
+    inventory_tracking: bool
+    kot_bot: str
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
 # ============ Inventory Schemas ============

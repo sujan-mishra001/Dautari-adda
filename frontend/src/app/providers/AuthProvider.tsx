@@ -70,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const login = async (newToken: string, expiresInMinutes: number = 30) => {
         try {
-            const response = await authAPI.getCurrentUser();
+            const response = await authAPI.getCurrentUser(newToken);
             const userData = {
                 username: response.data.username,
                 role: response.data.role,

@@ -9,8 +9,7 @@ import {
     LogOut,
     LayoutDashboard,
     Settings,
-    HelpCircle,
-    Building2
+    HelpCircle
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider';
@@ -22,8 +21,7 @@ const POSLayout: React.FC = () => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
 
-    // Check if we're on the main dashboard - use full screen mode
-    const isFullScreenDashboard = location.pathname === '/pos';
+
 
     const handleAccountClick = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -34,17 +32,12 @@ const POSLayout: React.FC = () => {
     };
 
     const menuItems = [
-        { icon: <Grid2X2 size={24} />, label: 'Tables', path: '/pos' },
+        { icon: <Grid2X2 size={24} />, label: 'Tables', path: '/pos/tables' },
         { icon: <Utensils size={24} />, label: 'KOT', path: '/pos/kot' },
         { icon: <ShoppingBag size={24} />, label: 'Orders', path: '/pos/orders' },
         { icon: <Wallet size={24} />, label: 'Cashier', path: '/pos/cashier' },
         { icon: <UserCircle size={24} />, label: 'Customers', path: '/pos/customers' },
     ];
-
-    // For full-screen dashboard, render without sidebar
-    if (isFullScreenDashboard) {
-        return <Outlet />;
-    }
 
     return (
         <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#fdfdfd' }}>
@@ -61,28 +54,6 @@ const POSLayout: React.FC = () => {
                 height: '100vh',
                 zIndex: 1200
             }}>
-                {/* Logo */}
-                <Box
-                    onClick={() => navigate('/pos')}
-                    sx={{ mb: 6, cursor: 'pointer', textAlign: 'center' }}
-                >
-                    <Avatar
-                        src="/logo.png"
-                        sx={{ width: 40, height: 40, bgcolor: 'transparent', mx: 'auto' }}
-                    />
-                    <Typography
-                        variant="caption"
-                        sx={{
-                            display: 'block',
-                            fontWeight: 700,
-                            color: '#FF8C00',
-                            mt: 0.5,
-                            fontSize: '10px'
-                        }}
-                    >
-                        POS
-                    </Typography>
-                </Box>
 
                 {/* Nav Items */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, flexGrow: 1 }}>
@@ -126,14 +97,6 @@ const POSLayout: React.FC = () => {
                 <Box sx={{ pb: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
                     {(user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'manager') && (
                         <>
-                            <Tooltip title="Floor & Table Settings" placement="right">
-                                <IconButton
-                                    onClick={() => navigate('/pos/floor-tables')}
-                                    sx={{ color: '#94a3b8', '&:hover': { color: '#FF8C00' } }}
-                                >
-                                    <Building2 size={20} />
-                                </IconButton>
-                            </Tooltip>
                             <Tooltip title="Admin Panel" placement="right">
                                 <IconButton
                                     onClick={() => navigate('/dashboard')}

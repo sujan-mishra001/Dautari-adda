@@ -1,7 +1,7 @@
 """
 Customer models
 """
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Float
 from datetime import datetime
 from app.database import Base
 
@@ -16,5 +16,8 @@ class Customer(Base):
     email = Column(String, nullable=True)
     address = Column(String, nullable=True)
     customer_type = Column(String, default="Regular")  # VIP, Regular, New, Corporate
+    total_spent = Column(Float, default=0.0)
+    total_visits = Column(Integer, default=0)
+    due_amount = Column(Float, default=0.0)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

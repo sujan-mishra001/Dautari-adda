@@ -18,7 +18,6 @@ import {
     InputAdornment
 } from '@mui/material';
 import { Plus, Search, X, Edit, Trash2 } from 'lucide-react';
-import DashboardLayout from '../../../components/layout/DashboardLayout';
 import { inventoryAPI } from '../../../services/api';
 
 const Units: React.FC = () => {
@@ -95,7 +94,7 @@ const Units: React.FC = () => {
     );
 
     return (
-        <DashboardLayout>
+        <Box>
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h5" fontWeight={800}>Units of Measurement</Typography>
                 <Button
@@ -196,7 +195,7 @@ const Units: React.FC = () => {
                     </Box>
                 </DialogContent>
             </Dialog>
-        </DashboardLayout>
+        </Box>
     );
 };
 

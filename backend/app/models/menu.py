@@ -15,7 +15,8 @@ class Category(Base):
     name = Column(String, nullable=False)
     type = Column(String, nullable=False)  # KOT or BOT
     image = Column(String, nullable=True)
-    status = Column(String, default="Active")
+    description = Column(String, nullable=True)
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -27,7 +28,8 @@ class MenuGroup(Base):
     name = Column(String, nullable=False)
     category_id = Column(Integer, ForeignKey("categories.id"))
     image = Column(String, nullable=True)
-    status = Column(String, default="Active")
+    description = Column(String, nullable=True)
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     
     category = relationship("Category")
@@ -43,9 +45,10 @@ class MenuItem(Base):
     group_id = Column(Integer, ForeignKey("menu_groups.id"), nullable=True)
     price = Column(Float, nullable=False)
     image = Column(String, nullable=True)
+    description = Column(String, nullable=True)
     inventory_tracking = Column(Boolean, default=False)
     kot_bot = Column(String, nullable=False)  # KOT or BOT
-    status = Column(String, default="Active")
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

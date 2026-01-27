@@ -12,9 +12,9 @@ import {
 } from '@mui/material';
 import { Settings, HelpCircle, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../app/providers/AuthProvider';
+import { useAuth } from '../../../app/providers/AuthProvider';
 
-const ProfileMenu: React.FC = () => {
+const POSMenu: React.FC = () => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const navigate = useNavigate();
     const { logout, user } = useAuth();
@@ -46,20 +46,19 @@ const ProfileMenu: React.FC = () => {
     };
 
     return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
             <IconButton
                 onClick={handleClick}
                 sx={{
-                    bgcolor: '#fff7ed',
-                    border: '2px solid #FF8C00',
-                    width: 56,
-                    height: 56,
+                    width: 48,
+                    height: 48,
+                    borderRadius: '12px',
                     transition: 'all 0.3s',
+                    bgcolor: open ? '#fff7ed' : 'transparent',
                     '&:hover': {
-                        bgcolor: '#FF8C00',
-                        transform: 'scale(1.05)',
+                        bgcolor: '#fff7ed',
                         '& .MuiAvatar-root': {
-                            color: 'white'
+                            color: '#FF8C00'
                         }
                     }
                 }}
@@ -68,10 +67,10 @@ const ProfileMenu: React.FC = () => {
                     sx={{
                         width: 40,
                         height: 40,
-                        bgcolor: 'transparent',
-                        color: '#FF8C00',
+                        bgcolor: open ? 'transparent' : '#e2e8f0',
+                        color: open ? '#FF8C00' : '#64748b',
                         fontWeight: 700,
-                        fontSize: '1.2rem'
+                        fontSize: '1.1rem'
                     }}
                 >
                     {user?.username?.[0]?.toUpperCase() || 'U'}
@@ -83,19 +82,19 @@ const ProfileMenu: React.FC = () => {
                 open={open}
                 onClose={handleClose}
                 anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'center',
+                    vertical: 'top', // Show above the button since sidebar is likely full height
+                    horizontal: 'left', // Align to left/right depending on sidebar pos, usually 'left' here means left of anchor? No. Let's stick to standard popover logic.
                 }}
                 transformOrigin={{
                     vertical: 'bottom',
-                    horizontal: 'center',
+                    horizontal: 'left',
                 }}
                 PaperProps={{
                     elevation: 3,
                     sx: {
                         minWidth: 200,
                         borderRadius: '12px',
-                        mt: -1,
+                        mb: 1, // Margin from bottom if popping up
                         border: '1px solid #e2e8f0',
                         '& .MuiMenuItem-root': {
                             py: 1.5,
@@ -166,4 +165,4 @@ const ProfileMenu: React.FC = () => {
     );
 };
 
-export default ProfileMenu;
+export default POSMenu;

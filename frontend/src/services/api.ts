@@ -48,12 +48,12 @@ export const authAPI = {
     });
   },
   signup: (data: any) => axios.post(`${API_BASE_URL}/signup`, data, { timeout: 30000 }), // Root level endpoint
-  getCurrentUser: () => {
-    // Use axios directly with token from localStorage for root-level endpoint
-    const token = localStorage.getItem('token');
+  getCurrentUser: (token?: string) => {
+    // Use axios directly with token explicitly provided or from localStorage for root-level endpoint
+    const authToken = token || localStorage.getItem('token');
     return axios.get(`${API_BASE_URL}/users/me`, {
       headers: {
-        'Authorization': token ? `Bearer ${token}` : ''
+        'Authorization': authToken ? `Bearer ${authToken}` : ''
       }
     });
   },

@@ -103,10 +103,19 @@ const Cashier: React.FC = () => {
                                 <TableRow key={order.id} hover>
                                     <TableCell sx={{ fontWeight: 600 }}>{order.order_number || 'N/A'}</TableCell>
                                     <TableCell>
-                                        {order.table?.table_id || order.customer?.name || 'N/A'}
+                                        <Box>
+                                            <Typography variant="body2" fontWeight={700}>
+                                                {order.table?.table_id ? `Table ${order.table.table_id}` : (order.customer?.name || 'Walk-in')}
+                                            </Typography>
+                                            {order.table?.table_id && order.customer?.name && (
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {order.customer.name}
+                                                </Typography>
+                                            )}
+                                        </Box>
                                     </TableCell>
                                     <TableCell>{order.order_type || 'N/A'}</TableCell>
-                                    <TableCell sx={{ fontWeight: 700 }}>रू {order.total_amount?.toLocaleString() || 0}</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }}>रू {order.net_amount?.toLocaleString() || 0}</TableCell>
                                     <TableCell>
                                         <Chip
                                             label={order.status || 'Pending'}

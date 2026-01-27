@@ -63,6 +63,8 @@ async def get_tables(
         if active_order:
             table_dict["active_order_id"] = active_order.id
             table_dict["total_amount"] = active_order.net_amount
+            table_dict["order_start_time"] = active_order.created_at
+
             
             # Count KOTs and BOTs
             kots = db.query(KOT).filter(KOT.order_id == active_order.id).all()

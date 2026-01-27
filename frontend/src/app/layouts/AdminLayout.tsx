@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
-import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, AppBar, Toolbar, Typography, IconButton, Avatar, Menu, MenuItem, Divider } from '@mui/material';
+import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, AppBar, Toolbar, Typography, IconButton, Avatar, Menu, MenuItem, Divider, Button, Tooltip } from '@mui/material';
 import {
     LayoutDashboard,
     Store,
     Users,
-    ShieldCheck,
     Package,
     ShoppingBag,
     UserCircle,
     BarChart3,
     Settings,
     LogOut,
-    Menu as MenuIcon
+    Menu as MenuIcon,
+    Utensils,
+    MonitorDot,
+    ChevronDown,
+    Building2
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider';
@@ -24,27 +27,20 @@ const AdminLayout: React.FC = () => {
     const location = useLocation();
     const { logout, user } = useAuth();
     const { currentBranch, selectBranch, accessibleBranches } = useBranch();
-    const [open, setOpen] = useState(true);
+
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [branchAnchorEl, setBranchAnchorEl] = useState<null | HTMLElement>(null);
 
-    const menuItems = [
-        { icon: <LayoutDashboard size={22} />, label: 'Dashboard', path: '/dashboard' },
-        { icon: <Store size={22} />, label: 'POS Interface', path: '/pos' },
-        { icon: <Store size={22} />, label: 'Branches', path: '/branches' },
-        { icon: <Users size={22} />, label: 'Staff Management', path: '/users' },
-        { icon: <ShieldCheck size={22} />, label: 'Roles & Permissions', path: '/roles' },
-        { icon: <Divider />, isDivider: true },
-        { icon: <ShoppingBag size={22} />, label: 'Orders', path: '/orders' },
-        { icon: <UserCircle size={22} />, label: 'Customers', path: '/customers' },
-        { icon: <Package size={22} />, label: 'Inventory', path: '/inventory' },
-        { icon: <BarChart3 size={22} />, label: 'Reports', path: '/reports' },
-        { icon: <Divider />, isDivider: true },
-        { icon: <Settings size={22} />, label: 'Settings', path: '/settings' },
-    ];
+    // State for collapsible submenus
+    const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
+    const [mobileOpen, setMobileOpen] = useState(false);
 
-    const handleLevelClick = (path: string) => {
-        navigate(path);
+    const handleDrawerToggle = () => {
+        setMobileOpen(!mobileOpen);
+    };
+
+    const toggleMenu = (text: string) => {
+        setOpenMenus(prev => ({ ...prev, [text]: !prev[text] }));
     };
 
     const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -65,15 +61,183 @@ const AdminLayout: React.FC = () => {
         navigate('/login');
     };
 
+    // Menu Definitions
+    const sidebarItems = [
+        { text: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
+        { text: 'Customers', icon: <UserCircle size={20} />, path: '/customers' },
+    ];
+
+    const restaurantItems = [
+        { text: 'Orders', icon: <Utensils size={20} />, path: '/orders' },
+        // { text: 'Delivery Partners', icon: <Truck size={20} />, path: '/delivery-partners' }, // Not implemented
+        {
+            text: 'Manage Menu',
+            icon: <MenuIcon size={20} />,
+            path: '/menu',
+            hasSub: false
+        },
+        {
+            text: 'Floors & Tables',
+            icon: <Building2 size={20} />,
+            path: '/floor-tables',
+            adminOnly: true
+        },
+    ];
+
+    const setupItems = [
+        {
+            text: 'User Management',
+            icon: <Users size={20} />,
+            path: '/users',
+            hasSub: true,
+            adminOnly: true,
+            subItems: [
+                { text: 'Staff', path: '/users' },
+                { text: 'Roles', path: '/roles' }
+            ]
+        },
+        {
+            text: 'Inventory',
+            icon: <Package size={20} />,
+            path: '/inventory',
+            hasSub: true,
+            subItems: [
+                { text: 'Products', path: '/inventory/products' },
+                { text: 'Units', path: '/inventory/units' },
+                { text: 'Add Inventory', path: '/inventory/add' },
+                { text: 'Adjustments', path: '/inventory/adjustment' },
+                { text: 'Counts', path: '/inventory/count' },
+                { text: 'BOM', path: '/inventory/bom' },
+                { text: 'Production', path: '/inventory/production' }
+            ]
+        },
+        {
+            text: 'Purchase',
+            icon: <ShoppingBag size={20} />,
+            path: '/purchase',
+            hasSub: true,
+            subItems: [
+                { text: 'Suppliers', path: '/purchase/supplier' },
+                { text: 'Bills', path: '/purchase/bill' },
+                { text: 'Returns', path: '/purchase/return' }
+            ]
+        },
+        { text: 'Reports', icon: <BarChart3 size={20} />, path: '/reports' },
+        { text: 'Settings', icon: <Settings size={20} />, path: '/settings' },
+    ];
+
+    const renderMenuItems = (items: any[]) => {
+        return items.filter(item => !item.adminOnly || user?.role === 'admin' || user?.role === 'Admin').map((item) => {
+            // Check if any subitem is active to auto-expand or highlight parent
+            const isSubActive = item.subItems?.some((sub: any) => location.pathname === sub.path);
+            const isActive = location.pathname === item.path;
+
+            return (
+                <React.Fragment key={item.text}>
+                    <ListItem disablePadding sx={{ mb: 0.5 }}>
+                        <ListItemButton
+                            onClick={() => item.hasSub ? toggleMenu(item.text) : navigate(item.path)}
+                            selected={isActive || isSubActive}
+                            sx={{
+                                borderRadius: '10px',
+                                mx: 1,
+                                '&.Mui-selected': { bgcolor: 'rgba(255, 140, 0, 0.08)', color: '#FF8C00' },
+                                '&.Mui-selected .MuiListItemIcon-root': { color: '#FF8C00' },
+                                '&:hover': { bgcolor: 'rgba(0,0,0,0.04)' }
+                            }}
+                        >
+                            <ListItemIcon sx={{ minWidth: 40, color: '#64748b' }}>{item.icon}</ListItemIcon>
+                            <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 600 }} />
+                            {item.hasSub && (
+                                item.isOpen || openMenus[item.text] ? <ChevronDown size={16} /> : <Box sx={{ transform: 'rotate(-90deg)' }}><ChevronDown size={16} /></Box>
+                            )}
+                        </ListItemButton>
+                    </ListItem>
+                    {item.hasSub && (openMenus[item.text] || isSubActive) && ( // Auto-expand if active
+                        <List disablePadding sx={{ pl: 2 }}>
+                            {item.subItems.filter((sub: any) => !sub.adminOnly || user?.role === 'admin' || user?.role === 'Admin').map((sub: any) => (
+                                <ListItem key={sub.text} disablePadding sx={{ mb: 0.2 }}>
+                                    <ListItemButton
+                                        onClick={() => navigate(sub.path)}
+                                        selected={location.pathname === sub.path}
+                                        sx={{
+                                            borderRadius: '8px',
+                                            py: 0.5,
+                                            mx: 1,
+                                            pl: 4,
+                                            '&.Mui-selected': { color: '#FF8C00', bgcolor: 'transparent' },
+                                            '&:hover': { color: '#FF8C00', bgcolor: 'transparent' }
+                                        }}
+                                    >
+                                        <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: location.pathname === sub.path ? '#FF8C00' : '#cbd5e1', mr: 2 }} />
+                                        <ListItemText
+                                            primary={sub.text}
+                                            primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 500 }}
+                                        />
+                                    </ListItemButton>
+                                </ListItem>
+                            ))}
+                        </List>
+                    )}
+                </React.Fragment>
+            )
+        });
+    };
+
+    const drawerContent = (
+        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'white' }}>
+            <Box sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {/* Logo Area */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Avatar
+                        src="/logo.png"
+                        sx={{ width: 40, height: 40, borderRadius: '8px' }}
+                        variant="square"
+                    />
+                    <Typography variant="h6" fontWeight={800} color="#FF8C00">
+                        Dautari Adda
+                    </Typography>
+                </Box>
+            </Box>
+
+            <Box sx={{ flexGrow: 1, overflowY: 'auto', py: 1 }}>
+                <List>
+                    {renderMenuItems(sidebarItems)}
+                </List>
+                <Divider sx={{ my: 1.5, mx: 2 }} >
+                    <Typography variant="caption" color="text.secondary">RESTAURANT</Typography>
+                </Divider>
+                <List>
+                    {renderMenuItems(restaurantItems)}
+                </List>
+                <Divider sx={{ my: 1.5, mx: 2 }} >
+                    <Typography variant="caption" color="text.secondary">SETUP</Typography>
+                </Divider>
+                <List>
+                    {renderMenuItems(setupItems)}
+                </List>
+            </Box>
+
+            <Box sx={{ p: 2, borderTop: '1px solid #f1f5f9' }}>
+                <ListItemButton onClick={handleLogout} sx={{ borderRadius: '10px', color: '#ef4444' }}>
+                    <ListItemIcon sx={{ minWidth: 40, color: '#ef4444' }}><LogOut size={20} /></ListItemIcon>
+                    <ListItemText primary="Logout" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 600 }} />
+                </ListItemButton>
+            </Box>
+        </Box>
+    );
+
     return (
         <Box sx={{ display: 'flex', bgcolor: '#f8fafc', minHeight: '100vh' }}>
             <AppBar
                 position="fixed"
                 sx={{
                     zIndex: (theme) => theme.zIndex.drawer + 1,
+                    width: { lg: `calc(100% - ${drawerWidth}px)` },
+                    ml: { lg: `${drawerWidth}px` },
                     bgcolor: 'white',
                     color: '#1e293b',
-                    boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+                    boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
                     borderBottom: '1px solid #e2e8f0'
                 }}
             >
@@ -82,15 +246,22 @@ const AdminLayout: React.FC = () => {
                         <IconButton
                             color="inherit"
                             aria-label="open drawer"
-                            onClick={() => setOpen(!open)}
+                            onClick={() => setMobileOpen(!mobileOpen)}
                             edge="start"
-                            sx={{ mr: 2 }}
+                            sx={{ mr: 2, display: { lg: 'none' } }}
                         >
                             <MenuIcon />
                         </IconButton>
-                        <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 800, color: '#FF8C00' }}>
-                            Dautari Adda
-                        </Typography>
+                        <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+                            <Typography variant="subtitle1" fontWeight={700} color="#1e293b">
+                                {
+                                    location.pathname.includes('/dashboard') ? 'Dashboard' :
+                                        location.pathname.includes('/inventory') ? 'Inventory Management' :
+                                            location.pathname.includes('/orders') ? 'Orders' :
+                                                'Admin Panel'
+                                }
+                            </Typography>
+                        </Box>
                     </Box>
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -103,16 +274,19 @@ const AdminLayout: React.FC = () => {
                                 gap: 1,
                                 cursor: 'pointer',
                                 px: 2,
-                                py: 1,
+                                py: 0.8,
                                 borderRadius: '8px',
+                                bgcolor: '#f8fafc',
+                                border: '1px solid #e2e8f0',
                                 '&:hover': { bgcolor: '#f1f5f9' }
                             }}
                         >
-                            <Store size={18} color="#64748b" />
+                            <Store size={16} color="#64748b" />
                             <Box>
-                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1 }}>Selected Branch</Typography>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{currentBranch?.name || 'Select Branch'}</Typography>
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1, fontSize: '0.7rem' }}>BRANCH</Typography>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.2 }}>{currentBranch?.name || 'Select'}</Typography>
                             </Box>
+                            <ChevronDown size={14} color="#94a3b8" />
                         </Box>
 
                         <Menu
@@ -140,9 +314,27 @@ const AdminLayout: React.FC = () => {
                             </MenuItem>
                         </Menu>
 
+                        {/* Top Bar Actions */}
+                        <Tooltip title="Open POS">
+                            <Button
+                                variant="contained"
+                                onClick={() => navigate('/pos')}
+                                startIcon={<MonitorDot size={18} />}
+                                sx={{
+                                    bgcolor: '#FF8C00',
+                                    textTransform: 'none',
+                                    fontWeight: 700,
+                                    boxShadow: 'none',
+                                    '&:hover': { bgcolor: '#e67e00', boxShadow: 'none' }
+                                }}
+                            >
+                                POS
+                            </Button>
+                        </Tooltip>
+
                         {/* Profile */}
                         <IconButton onClick={handleProfileMenuOpen} sx={{ p: 0.5 }}>
-                            <Avatar sx={{ width: 36, height: 36, bgcolor: '#FF8C00', fontWeight: 700 }}>
+                            <Avatar sx={{ width: 36, height: 36, bgcolor: '#FF8C00', fontWeight: 700, fontSize: '1rem' }}>
                                 {user?.username?.charAt(0).toUpperCase()}
                             </Avatar>
                         </IconButton>
@@ -160,7 +352,7 @@ const AdminLayout: React.FC = () => {
                                 <Typography variant="caption" color="text.secondary">{user?.role}</Typography>
                             </Box>
                             <Divider />
-                            <MenuItem onClick={() => { navigate('/profile'); handleClose(); }}>
+                            <MenuItem onClick={() => { navigate('/settings'); handleClose(); }}>
                                 <ListItemIcon><UserCircle size={18} /></ListItemIcon>
                                 My Profile
                             </MenuItem>
@@ -173,74 +365,37 @@ const AdminLayout: React.FC = () => {
                 </Toolbar>
             </AppBar>
 
-            <Drawer
-                variant="permanent"
-                open={open}
-                sx={{
-                    width: open ? drawerWidth : 80,
-                    flexShrink: 0,
-                    '& .MuiDrawer-paper': {
-                        width: open ? drawerWidth : 80,
-                        boxSizing: 'border-box',
-                        bgcolor: 'white',
-                        borderRight: '1px solid #e2e8f0',
-                        transition: 'width 0.2s',
-                        overflowX: 'hidden'
-                    },
-                }}
+            <Box
+                component="nav"
+                sx={{ width: { lg: drawerWidth }, flexShrink: { lg: 0 } }}
             >
-                <Toolbar />
-                <Box sx={{ overflow: 'auto', py: 2 }}>
-                    <List sx={{ px: 2 }}>
-                        {menuItems.map((item, index) => (
-                            item.isDivider ? (
-                                <Divider key={index} sx={{ my: 2 }} />
-                            ) : (
-                                <ListItem key={item.label} disablePadding sx={{ display: 'block', mb: 0.5 }}>
-                                    <ListItemButton
-                                        onClick={() => handleLevelClick(item.path!)}
-                                        selected={location.pathname === item.path}
-                                        sx={{
-                                            minHeight: 48,
-                                            justifyContent: open ? 'initial' : 'center',
-                                            px: 2.5,
-                                            borderRadius: '8px',
-                                            color: location.pathname === item.path ? '#FF8C00' : '#64748b',
-                                            bgcolor: location.pathname === item.path ? '#fff7ed' : 'transparent',
-                                            '&:hover': {
-                                                bgcolor: location.pathname === item.path ? '#fff7ed' : '#f8fafc',
-                                                color: '#FF8C00'
-                                            }
-                                        }}
-                                    >
-                                        <ListItemIcon
-                                            sx={{
-                                                minWidth: 0,
-                                                mr: open ? 2 : 'auto',
-                                                justifyContent: 'center',
-                                                color: 'inherit'
-                                            }}
-                                        >
-                                            {item.icon}
-                                        </ListItemIcon>
-                                        {open && (
-                                            <ListItemText
-                                                primary={item.label}
-                                                primaryTypographyProps={{
-                                                    fontWeight: location.pathname === item.path ? 700 : 500,
-                                                    fontSize: '0.9rem'
-                                                }}
-                                            />
-                                        )}
-                                    </ListItemButton>
-                                </ListItem>
-                            )
-                        ))}
-                    </List>
-                </Box>
-            </Drawer>
+                {/* Mobile Drawer */}
+                <Drawer
+                    variant="temporary"
+                    open={mobileOpen}
+                    onClose={handleDrawerToggle}
+                    ModalProps={{ keepMounted: true }}
+                    sx={{
+                        display: { xs: 'block', lg: 'none' },
+                        '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, borderRight: 'none' },
+                    }}
+                >
+                    {drawerContent}
+                </Drawer>
+                {/* Desktop Drawer */}
+                <Drawer
+                    variant="permanent"
+                    sx={{
+                        display: { xs: 'none', lg: 'block' },
+                        '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, borderRight: '1px solid #e2e8f0', bgcolor: 'white' },
+                    }}
+                    open
+                >
+                    {drawerContent}
+                </Drawer>
+            </Box>
 
-            <Box component="main" sx={{ flexGrow: 1, p: 3, pt: 10 }}>
+            <Box component="main" sx={{ flexGrow: 1, p: 3, pt: 10, bgcolor: '#f8fafc', minHeight: '100vh', width: { lg: `calc(100% - ${drawerWidth}px)` } }}>
                 <Outlet />
             </Box>
         </Box>

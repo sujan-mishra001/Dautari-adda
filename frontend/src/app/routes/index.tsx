@@ -19,7 +19,6 @@ import BranchSelection from '../../features/branches/BranchSelection';
 import BranchCreate from '../../features/branches/BranchCreate';
 import Dashboard from '../../features/dashboard/Dashboard';
 import POSDashboard from '../../features/pos/POSDashboard';
-import POS from '../../features/pos/POS';
 import Billing from '../../features/pos/billing/Billing';
 import OrderTaking from '../../features/pos/OrderTaking';
 import KOT from '../../features/pos/KOT';
@@ -97,14 +96,18 @@ const AppRoutes: React.FC = () => {
                         </Route>
                         <Route path="/reports" element={<Reports />} />
                         <Route path="/settings" element={<Settings />} />
+                        <Route path="/menu" element={<MenuManagement />} />
+                        <Route element={<PermissionGuard allowedRoles={['admin']} />}>
+                            <Route path="/floor-tables" element={<FloorTableSettings />} />
+                        </Route>
 
                         <Route path="/" element={<Navigate to="/dashboard" replace />} />
                     </Route>
 
                     {/* POS Interface */}
                     <Route path="/pos" element={<POSLayout />}>
-                        <Route index element={<POSDashboard />} />
-                        <Route path="tables" element={<POS />} />
+                        <Route index element={<Navigate to="/pos/tables" replace />} />
+                        <Route path="tables" element={<POSDashboard />} />
                         <Route path="customers" element={<Customers />} />
                         <Route path="orders" element={<Orders />} />
                         <Route path="kot" element={<KOT />} />
@@ -113,7 +116,6 @@ const AppRoutes: React.FC = () => {
                         <Route path="order/:tableId" element={<OrderTaking />} />
                         <Route path="order-taking/:tableId" element={<OrderTaking />} />
                         <Route path="settings" element={<POSSettings />} />
-                        <Route path="floor-tables" element={<FloorTableSettings />} />
                         <Route path="menu" element={<MenuManagement />} />
                         <Route path="sessions" element={<Sessions />} />
                         <Route path="support" element={<Support />} />

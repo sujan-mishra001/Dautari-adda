@@ -24,10 +24,11 @@ import {
     X,
     Trash2,
     ShoppingCart,
-    ShoppingBasket
+    ShoppingBasket,
+    UserCircle
 } from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { menuAPI, tablesAPI, ordersAPI, kotAPI } from '../../services/api';
+import { menuAPI, tablesAPI, ordersAPI, kotAPI, customersAPI } from '../../services/api';
 
 interface Category {
     id: number;
@@ -80,6 +81,10 @@ const OrderTaking: React.FC = () => {
     const [table, setTable] = useState<any>(tableInfo);
     const [existingOrder, setExistingOrder] = useState<any>(null);
 
+    const [customers, setCustomers] = useState<any[]>([]);
+    const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+    const [customerSearch, setCustomerSearch] = useState('');
+
     useEffect(() => {
         loadData();
     }, []);
@@ -87,19 +92,25 @@ const OrderTaking: React.FC = () => {
     const loadData = async () => {
         try {
             setLoading(true);
-            const [catsRes, groupsRes, itemsRes] = await Promise.all([
+            const [catsRes, groupsRes, itemsRes, custRes] = await Promise.all([
                 menuAPI.getCategories(),
                 menuAPI.getGroups(),
-                menuAPI.getItems()
+                menuAPI.getItems(),
+                customersAPI.getAll()
             ]);
 
-            setCategories(catsRes.data);
-            setGroups(groupsRes.data);
-            setAllItems(itemsRes.data);
+            setCustomers(custRes.data || []);
 
-            if (catsRes.data.length > 0) {
-                setSelectedCategoryId(catsRes.data[0].id);
-                const firstGroup = groupsRes.data.find((g: MenuGroup) => g.category_id === catsRes.data[0].id);
+            const activeCategories = catsRes.data.filter((c: any) => c.is_active !== false);
+            const activeItems = itemsRes.data.filter((i: any) => i.is_active !== false);
+
+            setCategories(activeCategories);
+            setGroups(groupsRes.data);
+            setAllItems(activeItems);
+
+            if (activeCategories.length > 0) {
+                setSelectedCategoryId(activeCategories[0].id);
+                const firstGroup = groupsRes.data.find((g: MenuGroup) => g.category_id === activeCategories[0].id);
                 if (firstGroup) {
                     setSelectedGroupId(firstGroup.id);
                 }
@@ -130,6 +141,9 @@ const OrderTaking: React.FC = () => {
                         item_id: item.menu_item_id
                     }));
                     setOrderItems(mappedItems);
+                    if (activeOrder.customer) {
+                        setSelectedCustomer(activeOrder.customer);
+                    }
                 }
             }
         } catch (error) {
@@ -145,7 +159,7 @@ const OrderTaking: React.FC = () => {
         setSelectedGroupId(firstGroup ? firstGroup.id : null);
     };
 
-    const filteredGroups = groups.filter(g => g.category_id === selectedCategoryId);
+    const filteredGroups = groups.filter(g => g.category_id === selectedCategoryId && (g as any).is_active !== false);
 
     const filteredItems = allItems.filter(item => {
         const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -191,6 +205,7 @@ const OrderTaking: React.FC = () => {
             let orderId;
             const orderPayload = {
                 table_id: table?.id,
+                customer_id: selectedCustomer?.id,
                 order_type: table?.is_hold_table === 'Yes' ? 'Takeaway' : 'Table',
                 status: 'Pending',
                 gross_amount: total,
@@ -511,6 +526,109 @@ const OrderTaking: React.FC = () => {
                         <IconButton size="small" onClick={() => setOrderItems([])} disabled={orderItems.length === 0}>
                             <Trash2 size={18} color="#94a3b8" />
                         </IconButton>
+                    </Box>
+
+                    {/* Customer Selection */}
+                    <Box sx={{ mb: 2, position: 'relative' }}>
+                        {selectedCustomer ? (
+                            <Box sx={{
+                                p: 1.5,
+                                borderRadius: '12px',
+                                bgcolor: '#fff7ed',
+                                border: '1px solid #ffedd5',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1.5
+                            }}>
+                                <UserCircle size={20} color="#FF8C00" />
+                                <Box sx={{ flex: 1 }}>
+                                    <Typography variant="body2" fontWeight={800} color="#9a3412">{selectedCustomer.name}</Typography>
+                                    <Typography variant="caption" color="#c2410c">{selectedCustomer.phone || 'No phone'}</Typography>
+                                </Box>
+                                <IconButton size="small" onClick={() => setSelectedCustomer(null)}>
+                                    <X size={16} color="#c2410c" />
+                                </IconButton>
+                            </Box>
+                        ) : (
+                            <Box>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    placeholder="Add Customer (Name or Phone)"
+                                    value={customerSearch}
+                                    onChange={(e) => setCustomerSearch(e.target.value)}
+                                    InputProps={{
+                                        startAdornment: <InputAdornment position="start"><Search size={16} /></InputAdornment>,
+                                        sx: { borderRadius: '12px', fontSize: '0.85rem' }
+                                    }}
+                                />
+                                {customerSearch && (
+                                    <Paper sx={{
+                                        position: 'absolute',
+                                        top: '100%',
+                                        left: 0,
+                                        right: 0,
+                                        zIndex: 10,
+                                        mt: 0.5,
+                                        maxHeight: 200,
+                                        overflow: 'auto',
+                                        borderRadius: '12px',
+                                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                                        border: '1px solid #f1f5f9'
+                                    }}>
+                                        <List sx={{ p: 0 }}>
+                                            {customers
+                                                .filter(c =>
+                                                    c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
+                                                    (c.phone && c.phone.includes(customerSearch))
+                                                )
+                                                .map(c => (
+                                                    <ListItem
+                                                        key={c.id}
+                                                        onClick={() => {
+                                                            setSelectedCustomer(c);
+                                                            setCustomerSearch('');
+                                                        }}
+                                                        sx={{
+                                                            cursor: 'pointer',
+                                                            '&:hover': { bgcolor: '#f8fafc' },
+                                                            borderBottom: '1px solid #f1f5f9',
+                                                            py: 1
+                                                        }}
+                                                    >
+                                                        <Box>
+                                                            <Typography variant="body2" fontWeight={700}>{c.name}</Typography>
+                                                            <Typography variant="caption" color="text.secondary">{c.phone}</Typography>
+                                                        </Box>
+                                                    </ListItem>
+                                                ))}
+                                            <ListItem
+                                                onClick={async () => {
+                                                    try {
+                                                        const res = await customersAPI.create({ name: customerSearch });
+                                                        setSelectedCustomer(res.data);
+                                                        setCustomers(prev => [...prev, res.data]);
+                                                        setCustomerSearch('');
+                                                    } catch (error) {
+                                                        alert("Error adding customer");
+                                                    }
+                                                }}
+                                                sx={{
+                                                    cursor: 'pointer',
+                                                    '&:hover': { bgcolor: '#fff7ed' },
+                                                    py: 1,
+                                                    bgcolor: '#f8fafc'
+                                                }}
+                                            >
+                                                <Typography variant="body2" fontWeight={700} color="#FF8C00">
+                                                    + Quick Add "{customerSearch}"
+                                                </Typography>
+                                            </ListItem>
+                                        </List>
+                                    </Paper>
+                                )}
+                            </Box>
+                        )}
                     </Box>
 
                     <Box sx={{ display: 'flex', gap: 1 }}>

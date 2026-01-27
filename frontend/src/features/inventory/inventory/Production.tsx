@@ -19,7 +19,6 @@ import {
     Chip
 } from '@mui/material';
 import { Plus, X } from 'lucide-react';
-import DashboardLayout from '../../../components/layout/DashboardLayout';
 import { inventoryAPI } from '../../../services/api';
 
 const Production: React.FC = () => {
@@ -86,7 +85,7 @@ const Production: React.FC = () => {
     };
 
     return (
-        <DashboardLayout>
+        <Box>
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h5" fontWeight={800}>Batch Production</Typography>
                 <Button
@@ -193,7 +192,7 @@ const Production: React.FC = () => {
                     </Box>
                 </DialogContent>
             </Dialog>
-        </DashboardLayout>
+        </Box>
     );
 };
 
