@@ -24,7 +24,7 @@ async def get_kots(
 ):
     """Get all KOTs/BOTs, optionally filtered by type and status"""
     query = db.query(KOT).options(
-        joinedload(KOT.order),
+        joinedload(KOT.order).joinedload(Order.table),
         joinedload(KOT.items).joinedload(KOTItem.menu_item)
     )
     
@@ -45,7 +45,7 @@ async def get_kot(
 ):
     """Get KOT by ID"""
     kot = db.query(KOT).options(
-        joinedload(KOT.order),
+        joinedload(KOT.order).joinedload(Order.table),
         joinedload(KOT.items).joinedload(KOTItem.menu_item)
     ).filter(KOT.id == kot_id).first()
     

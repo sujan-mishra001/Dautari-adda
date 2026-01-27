@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Box,
     Typography,
@@ -14,6 +14,8 @@ import {
 } from '@mui/material';
 import { ChefHat, Beer, Clock, Printer, CheckCircle2, XCircle } from 'lucide-react';
 import { kotAPI } from '../../services/api';
+import { useReactToPrint } from 'react-to-print';
+import KOTPrintView from './billing/KOTPrintView';
 
 interface KOTItem {
     id: number;
@@ -23,8 +25,10 @@ interface KOTItem {
     status: string;
     created_at: string;
     order?: {
+        table_id?: number;
         table?: { table_id: string };
         customer?: { name: string };
+        order_type?: string;
     };
     items?: Array<{
         id: number;
@@ -44,6 +48,14 @@ const KOT: React.FC = () => {
     const [kots, setKots] = useState<KOTItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedKot, setSelectedKot] = useState<KOTItem | null>(null);
+
+    const kotRef = useRef<HTMLDivElement>(null);
+
+    const handlePrintKot = useReactToPrint({
+        contentRef: kotRef,
+        documentTitle: `KOT_${selectedKot?.kot_number}`,
+        onPrintError: () => alert("Printer not found or error occurred while printing.")
+    });
 
     useEffect(() => {
         loadKots();
@@ -95,6 +107,11 @@ const KOT: React.FC = () => {
 
     return (
         <Box sx={{ display: 'flex', height: 'calc(100vh - 120px)', bgcolor: '#f8fafc', m: -3, p: 3 }}>
+            {/* Hidden Print Content */}
+            <Box sx={{ display: 'none' }}>
+                <KOTPrintView ref={kotRef} kot={selectedKot} />
+            </Box>
+
             {/* Left: KOT List */}
             <Box sx={{ width: 400, display: 'flex', flexDirection: 'column', gap: 2, pr: 2 }}>
                 <Paper sx={{ p: 1, borderRadius: '12px' }}>
@@ -201,7 +218,7 @@ const KOT: React.FC = () => {
                             </Box>
                             <Box sx={{ display: 'flex', gap: 1 }}>
                                 <Tooltip title="Print KOT">
-                                    <IconButton><Printer size={20} /></IconButton>
+                                    <IconButton onClick={() => handlePrintKot()}><Printer size={20} /></IconButton>
                                 </Tooltip>
                                 {selectedKot.status !== 'Served' ? (
                                     <Button
@@ -267,10 +284,24 @@ const KOT: React.FC = () => {
                         </Box>
 
                         <Divider />
-                        <Box sx={{ p: 3, bgcolor: '#f1f5f9', borderRadius: '0 0 16px 16px' }}>
-                            <Typography variant="body2" color="text.secondary">
-                                Customer: <strong>{selectedKot.order?.customer?.name || 'In-store Guest'}</strong>
-                            </Typography>
+                        <Box sx={{ p: 1, bgcolor: 'white', borderRadius: '0 0 16px 16px' }}>
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                startIcon={<Printer size={20} />}
+                                onClick={() => handlePrintKot()}
+                                sx={{
+                                    py: 1,
+                                    bgcolor: '#FF8C00',
+                                    '&:hover': { bgcolor: '#e67e00' },
+                                    borderRadius: '12px',
+                                    fontWeight: 800,
+                                    fontSize: '16px',
+                                    textTransform: 'none'
+                                }}
+                            >
+                                Print {selectedKot.kot_type || 'KOT'}
+                            </Button>
                         </Box>
                     </Paper>
                 ) : (

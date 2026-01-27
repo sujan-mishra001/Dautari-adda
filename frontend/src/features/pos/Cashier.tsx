@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Box,
     Typography,
@@ -12,15 +12,27 @@ import {
     Button,
     Chip,
     TextField,
-    InputAdornment
+    InputAdornment,
+    Dialog,
+    DialogContent,
+    DialogActions,
+    IconButton
 } from '@mui/material';
-import { Search, Receipt, Download } from 'lucide-react';
+import { Search, Receipt, Download, Printer, X } from 'lucide-react';
 import { ordersAPI } from '../../services/api';
+import { useReactToPrint } from 'react-to-print';
+import BillView from './billing/BillView';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 const Cashier: React.FC = () => {
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedOrder, setSelectedOrder] = useState<any>(null);
+    const [billDialogOpen, setBillDialogOpen] = useState(false);
+
+    const billRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         loadOrders();
@@ -30,9 +42,10 @@ const Cashier: React.FC = () => {
         try {
             setLoading(true);
             const response = await ordersAPI.getAll();
-            // Filter for completed/pending payment orders
+            // Show only unsettled orders: Pending, In Progress, or Completed (served but not yet paid)
+            const runningStatuses = ['Pending', 'In Progress', 'Completed'];
             const cashierOrders = (response.data || []).filter((order: any) =>
-                order.status === 'Completed' || order.status === 'Pending'
+                runningStatuses.includes(order.status)
             );
             setOrders(cashierOrders);
         } catch (error) {
@@ -43,9 +56,43 @@ const Cashier: React.FC = () => {
         }
     };
 
-    const handlePrintBill = (_orderId: number) => {
-        // TODO: Implement bill printing
-        alert('Bill printing functionality will be implemented');
+    const handlePrintBill = (order: any) => {
+        setSelectedOrder(order);
+        setBillDialogOpen(true);
+    };
+
+    const handlePrint = useReactToPrint({
+        contentRef: billRef,
+        documentTitle: `Bill_${selectedOrder?.order_number}`,
+        onAfterPrint: () => console.log("Print Success"),
+        onPrintError: () => alert("Printer not found or error occurred while printing.")
+    });
+
+    const handleDownloadPDF = async () => {
+        if (!billRef.current) return;
+
+        try {
+            const canvas = await html2canvas(billRef.current, {
+                scale: 2,
+                logging: false,
+                useCORS: true
+            });
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF({
+                unit: 'mm',
+                format: [80, 200] // Thermal roll format
+            });
+
+            const imgProps = pdf.getImageProperties(imgData);
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`Bill_${selectedOrder?.order_number}.pdf`);
+        } catch (error) {
+            console.error("PDF Export Error:", error);
+            alert("Failed to generate PDF");
+        }
     };
 
     const filteredOrders = orders.filter(order =>
@@ -93,11 +140,11 @@ const Cashier: React.FC = () => {
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={6} align="center">Loading...</TableCell>
+                                <TableCell colSpan={7} align="center">Loading...</TableCell>
                             </TableRow>
                         ) : filteredOrders.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} align="center">No orders found for cashier.</TableCell>
+                                <TableCell colSpan={7} align="center">No orders found for cashier.</TableCell>
                             </TableRow>
                         ) : (
                             filteredOrders.map((order) => (
@@ -125,8 +172,8 @@ const Cashier: React.FC = () => {
                                             label={order.status || 'Pending'}
                                             size="small"
                                             sx={{
-                                                bgcolor: order.status === 'Completed' ? '#22c55e15' : '#f59e0b15',
-                                                color: order.status === 'Completed' ? '#22c55e' : '#f59e0b',
+                                                bgcolor: order.status === 'Paid' || order.status === 'Completed' ? '#22c55e15' : '#f59e0b15',
+                                                color: order.status === 'Paid' || order.status === 'Completed' ? '#22c55e' : '#f59e0b',
                                                 fontWeight: 700
                                             }}
                                         />
@@ -135,17 +182,10 @@ const Cashier: React.FC = () => {
                                         <Button
                                             size="small"
                                             startIcon={<Receipt size={14} />}
-                                            onClick={() => handlePrintBill(order.id)}
+                                            onClick={() => handlePrintBill(order)}
                                             sx={{ color: '#FF8C00', textTransform: 'none', mr: 1 }}
                                         >
                                             Bill
-                                        </Button>
-                                        <Button
-                                            size="small"
-                                            startIcon={<Download size={14} />}
-                                            sx={{ color: '#64748b', textTransform: 'none' }}
-                                        >
-                                            PDF
                                         </Button>
                                     </TableCell>
                                 </TableRow>
@@ -154,6 +194,47 @@ const Cashier: React.FC = () => {
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            {/* Bill Preview Dialog */}
+            <Dialog
+                open={billDialogOpen}
+                onClose={() => setBillDialogOpen(false)}
+                maxWidth="xs"
+                fullWidth
+                PaperProps={{ sx: { borderRadius: '16px' } }}
+            >
+                <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9' }}>
+                    <Typography variant="h6" fontWeight={800}>Bill Preview</Typography>
+                    <IconButton onClick={() => setBillDialogOpen(false)} size="small"><X size={20} /></IconButton>
+                </Box>
+                <DialogContent sx={{ p: 0, bgcolor: '#f8fafc' }}>
+                    <Box sx={{ p: 2 }}>
+                        <Paper elevation={0} sx={{ p: 0, overflow: 'hidden', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                            <BillView ref={billRef} order={selectedOrder} />
+                        </Paper>
+                    </Box>
+                </DialogContent>
+                <DialogActions sx={{ p: 2, gap: 1 }}>
+                    <Button
+                        fullWidth
+                        variant="outlined"
+                        startIcon={<Download size={18} />}
+                        onClick={handleDownloadPDF}
+                        sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700 }}
+                    >
+                        Save as PDF
+                    </Button>
+                    <Button
+                        fullWidth
+                        variant="contained"
+                        startIcon={<Printer size={18} />}
+                        onClick={() => handlePrint()}
+                        sx={{ borderRadius: '10px', bgcolor: '#FF8C00', '&:hover': { bgcolor: '#FF7700' }, textTransform: 'none', fontWeight: 700 }}
+                    >
+                        Print Bill
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

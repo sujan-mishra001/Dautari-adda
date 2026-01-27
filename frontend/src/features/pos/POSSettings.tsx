@@ -33,7 +33,7 @@ import {
     MoreVertical,
     Plus
 } from 'lucide-react';
-import { menuAPI, authAPI } from '../../services/api';
+import { menuAPI, authAPI, usersAPI } from '../../services/api';
 
 const POSSettings: React.FC = () => {
     const [sidebarTab, setSidebarTab] = useState(1);
@@ -52,6 +52,8 @@ const POSSettings: React.FC = () => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [menuType, setMenuType] = useState<'item' | 'category' | 'group' | null>(null);
+    const [isEditingProfile, setIsEditingProfile] = useState(false);
+    const [editProfileData, setEditProfileData] = useState<any>({});
 
     useEffect(() => {
         loadData();
@@ -67,6 +69,7 @@ const POSSettings: React.FC = () => {
                 menuAPI.getGroups()
             ]);
             setCurrentUser(userRes.data);
+            setEditProfileData(userRes.data);
             setItems(itemsRes.data || []);
             setCategories(catsRes.data || []);
             setGroups(groupsRes.data || []);
@@ -74,6 +77,19 @@ const POSSettings: React.FC = () => {
             console.error("Error loading settings data:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleUpdateProfile = async () => {
+        try {
+            if (!currentUser?.id) return;
+            await usersAPI.update(currentUser.id, editProfileData);
+            setIsEditingProfile(false);
+            loadData();
+            alert('Profile updated successfully');
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            alert('Failed to update profile');
         }
     };
 
@@ -193,15 +209,102 @@ const POSSettings: React.FC = () => {
                 {/* Content */}
                 <Box sx={{ flexGrow: 1 }}>
                     {sidebarTab === 0 && currentUser && (
-                        <Paper sx={{ p: 3, borderRadius: '16px' }}>
-                            <Typography variant="h6" fontWeight={800} gutterBottom>Profile Information</Typography>
-                            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, mt: 3 }}>
-                                <TextField label="Username" defaultValue={currentUser.username} disabled fullWidth />
-                                <TextField label="Role" defaultValue={currentUser.role} disabled fullWidth />
-                                <TextField label="Display Name" defaultValue={currentUser.full_name} fullWidth />
-                                <TextField label="Email" defaultValue={currentUser.email} fullWidth />
+                        <Paper sx={{ p: 4, borderRadius: '20px', border: '1px solid #f1f5f9', bgcolor: 'white' }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                                <Box>
+                                    <Typography variant="h5" fontWeight={900} color="#1e293b">Account Profile</Typography>
+                                    <Typography variant="body2" color="text.secondary">Review and manage your personal details</Typography>
+                                </Box>
+                                <Button
+                                    variant={isEditingProfile ? "outlined" : "contained"}
+                                    onClick={() => setIsEditingProfile(!isEditingProfile)}
+                                    sx={{
+                                        borderRadius: '12px',
+                                        textTransform: 'none',
+                                        fontWeight: 700,
+                                        bgcolor: isEditingProfile ? 'transparent' : '#FF8C00',
+                                        '&:hover': { bgcolor: isEditingProfile ? '#fff7ed' : '#e67e00' }
+                                    }}
+                                >
+                                    {isEditingProfile ? 'Cancel Editing' : 'Edit Profile'}
+                                </Button>
                             </Box>
-                            <Button variant="contained" sx={{ mt: 3, bgcolor: '#FF8C00' }}>Update Profile</Button>
+
+                            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+                                <TextField
+                                    label="Username"
+                                    value={currentUser.username}
+                                    disabled
+                                    fullWidth
+                                    variant="filled"
+                                    helperText="Username cannot be changed"
+                                />
+                                <TextField
+                                    label="Staff Role"
+                                    value={currentUser.role}
+                                    disabled
+                                    fullWidth
+                                    variant="filled"
+                                    helperText="Role is managed by administrator"
+                                />
+                                <TextField
+                                    label="Full Name"
+                                    value={isEditingProfile ? (editProfileData.full_name ?? currentUser.full_name) : currentUser.full_name}
+                                    disabled={!isEditingProfile}
+                                    onChange={(e) => setEditProfileData({ ...editProfileData, full_name: e.target.value })}
+                                    fullWidth
+                                />
+                                <TextField
+                                    label="Email Address"
+                                    value={isEditingProfile ? (editProfileData.email ?? currentUser.email) : currentUser.email}
+                                    disabled={!isEditingProfile}
+                                    onChange={(e) => setEditProfileData({ ...editProfileData, email: e.target.value })}
+                                    fullWidth
+                                />
+                                <TextField
+                                    label="Phone Number"
+                                    value={isEditingProfile ? (editProfileData.phone ?? currentUser.phone ?? '') : (currentUser.phone ?? 'Not provided')}
+                                    disabled={!isEditingProfile}
+                                    onChange={(e) => setEditProfileData({ ...editProfileData, phone: e.target.value })}
+                                    fullWidth
+                                />
+                                <TextField
+                                    label="Organization / Branch"
+                                    value={currentUser.branch_name || 'Main Branch'}
+                                    disabled
+                                    fullWidth
+                                    variant="filled"
+                                />
+                                <TextField
+                                    label="Address"
+                                    value={isEditingProfile ? (editProfileData.address ?? currentUser.address ?? '') : (currentUser.address ?? 'Not provided')}
+                                    disabled={!isEditingProfile}
+                                    onChange={(e) => setEditProfileData({ ...editProfileData, address: e.target.value })}
+                                    fullWidth
+                                    multiline
+                                    rows={2}
+                                    sx={{ gridColumn: { md: '1 / span 2' } }}
+                                />
+                            </Box>
+
+                            {isEditingProfile && (
+                                <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                                    <Button
+                                        variant="contained"
+                                        onClick={handleUpdateProfile}
+                                        sx={{
+                                            px: 4,
+                                            py: 1.5,
+                                            borderRadius: '12px',
+                                            bgcolor: '#FF8C00',
+                                            fontWeight: 800,
+                                            '&:hover': { bgcolor: '#e67e00' }
+                                        }}
+                                    >
+                                        Save Changes
+                                    </Button>
+                                </Box>
+                            )}
                         </Paper>
                     )}
 
