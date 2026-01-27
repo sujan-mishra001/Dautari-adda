@@ -31,13 +31,13 @@ import {
     LayoutGrid,
     BookOpen,
     MoreVertical,
-    Plus,
-    ListChecks
+    Plus
 } from 'lucide-react';
 import { menuAPI, authAPI } from '../../services/api';
 
 const POSSettings: React.FC = () => {
-    const [sidebarTab, setSidebarTab] = useState(2);
+    const [sidebarTab, setSidebarTab] = useState(1);
+    const [subTab, setSubTab] = useState(0); // 0 for Categories, 1 for Groups
     const [items, setItems] = useState<any[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
     const [groups, setGroups] = useState<any[]>([]);
@@ -106,8 +106,14 @@ const POSSettings: React.FC = () => {
 
     const handleSaveCategory = async () => {
         try {
-            if (currentCategory.id) await menuAPI.updateCategory(currentCategory.id, currentCategory);
-            else await menuAPI.createCategory(currentCategory);
+            const payload = {
+                name: currentCategory.name,
+                type: currentCategory.type,
+                description: currentCategory.description || '',
+                is_active: currentCategory.status === 'Active'
+            };
+            if (currentCategory.id) await menuAPI.updateCategory(currentCategory.id, payload);
+            else await menuAPI.createCategory(payload);
             setCategoryDialog(false);
             setCurrentCategory({ name: '', type: 'KOT', status: 'Active' });
             loadData();
@@ -116,8 +122,14 @@ const POSSettings: React.FC = () => {
 
     const handleSaveGroup = async () => {
         try {
-            if (currentGroup.id) await menuAPI.updateGroup(currentGroup.id, currentGroup);
-            else await menuAPI.createGroup(currentGroup);
+            const payload = {
+                name: currentGroup.name,
+                category_id: Number(currentGroup.category_id),
+                description: currentGroup.description || '',
+                is_active: currentGroup.status === 'Active'
+            };
+            if (currentGroup.id) await menuAPI.updateGroup(currentGroup.id, payload);
+            else await menuAPI.createGroup(payload);
             setGroupDialog(false);
             setCurrentGroup({ name: '', category_id: '', status: 'Active' });
             loadData();
@@ -126,8 +138,18 @@ const POSSettings: React.FC = () => {
 
     const handleSaveItem = async () => {
         try {
-            if (currentItem.id) await menuAPI.updateItem(currentItem.id, currentItem);
-            else await menuAPI.createItem(currentItem);
+            const payload = {
+                name: currentItem.name,
+                category_id: Number(currentItem.category_id),
+                group_id: currentItem.group_id ? Number(currentItem.group_id) : null,
+                price: Number(currentItem.price),
+                kot_bot: currentItem.kot_bot,
+                inventory_tracking: currentItem.inventory_tracking,
+                description: currentItem.description || '',
+                is_active: currentItem.status === 'Active'
+            };
+            if (currentItem.id) await menuAPI.updateItem(currentItem.id, payload);
+            else await menuAPI.createItem(payload);
             setItemDialog(false);
             setCurrentItem({ name: '', category_id: '', group_id: '', price: 0, kot_bot: 'KOT', inventory_tracking: false, status: 'Active' });
             loadData();
@@ -138,7 +160,6 @@ const POSSettings: React.FC = () => {
         { label: 'Profile', icon: <User size={18} /> },
         { label: 'Category', icon: <LayoutGrid size={18} /> },
         { label: 'Menu Items', icon: <BookOpen size={18} /> },
-        { label: 'Toppings', icon: <ListChecks size={18} /> },
     ];
 
     if (loading && !currentUser) {
@@ -186,34 +207,55 @@ const POSSettings: React.FC = () => {
 
                     {sidebarTab === 1 && (
                         <Box>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                                <Typography variant="h6" fontWeight={800}>Categories & Groups</Typography>
-                                <Box sx={{ display: 'flex', gap: 2 }}>
-                                    <Button variant="outlined" startIcon={<Plus size={18} />} onClick={() => setCategoryDialog(true)}>Add Category</Button>
-                                    <Button variant="outlined" startIcon={<Plus size={18} />} onClick={() => setGroupDialog(true)}>Add Group</Button>
-                                </Box>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                                <Tabs value={subTab} onChange={(_, v) => setSubTab(v)}>
+                                    <Tab label="Categories" sx={{ fontWeight: 700 }} />
+                                    <Tab label="Groups" sx={{ fontWeight: 700 }} />
+                                </Tabs>
+                                <Button
+                                    variant="contained"
+                                    startIcon={<Plus size={18} />}
+                                    onClick={() => subTab === 0 ? setCategoryDialog(true) : setGroupDialog(true)}
+                                    sx={{ bgcolor: '#FF8C00', '&:hover': { bgcolor: '#e67e00' } }}
+                                >
+                                    Add {subTab === 0 ? 'Category' : 'Group'}
+                                </Button>
                             </Box>
-                            <TableContainer component={Paper} sx={{ borderRadius: '16px' }}>
+
+                            <TableContainer component={Paper} sx={{ borderRadius: '16px', border: '1px solid #e2e8f0' }} elevation={0}>
                                 <Table>
                                     <TableHead sx={{ bgcolor: '#f8fafc' }}>
                                         <TableRow>
-                                            <TableCell sx={{ fontWeight: 800 }}>Category Name</TableCell>
-                                            <TableCell sx={{ fontWeight: 800 }}>Type</TableCell>
+                                            <TableCell sx={{ fontWeight: 800 }}>{subTab === 0 ? 'Category Name' : 'Group Name'}</TableCell>
+                                            <TableCell sx={{ fontWeight: 800 }}>{subTab === 0 ? 'Type' : 'Category'}</TableCell>
                                             <TableCell sx={{ fontWeight: 800 }}>Status</TableCell>
                                             <TableCell align="right" sx={{ fontWeight: 800 }}>Actions</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {categories.map((cat) => (
-                                            <TableRow key={cat.id}>
-                                                <TableCell sx={{ fontWeight: 600 }}>{cat.name}</TableCell>
-                                                <TableCell><Chip label={cat.type} size="small" /></TableCell>
-                                                <TableCell><Chip label={cat.status} size="small" color={cat.status === 'Active' ? 'success' : 'default'} /></TableCell>
-                                                <TableCell align="right">
-                                                    <IconButton onClick={(e) => handleMenuOpen(e, cat.id, 'category')}><MoreVertical size={18} /></IconButton>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
+                                        {subTab === 0 ? (
+                                            categories.map((cat) => (
+                                                <TableRow key={cat.id}>
+                                                    <TableCell sx={{ fontWeight: 600 }}>{cat.name}</TableCell>
+                                                    <TableCell><Chip label={cat.type} size="small" variant="outlined" /></TableCell>
+                                                    <TableCell><Chip label={cat.status || 'Active'} size="small" color={(cat.status === 'Active' || cat.is_active) ? 'success' : 'default'} /></TableCell>
+                                                    <TableCell align="right">
+                                                        <IconButton onClick={(e) => handleMenuOpen(e, cat.id, 'category')}><MoreVertical size={18} /></IconButton>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        ) : (
+                                            groups.map((grp) => (
+                                                <TableRow key={grp.id}>
+                                                    <TableCell sx={{ fontWeight: 600 }}>{grp.name}</TableCell>
+                                                    <TableCell>{categories.find(c => c.id === grp.category_id)?.name || '-'}</TableCell>
+                                                    <TableCell><Chip label={grp.status || 'Active'} size="small" color={(grp.status === 'Active' || grp.is_active) ? 'success' : 'default'} /></TableCell>
+                                                    <TableCell align="right">
+                                                        <IconButton onClick={(e) => handleMenuOpen(e, grp.id, 'group')}><MoreVertical size={18} /></IconButton>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
                                     </TableBody>
                                 </Table>
                             </TableContainer>
@@ -243,7 +285,7 @@ const POSSettings: React.FC = () => {
                                                 <TableCell sx={{ fontWeight: 600 }}>{item.name}</TableCell>
                                                 <TableCell>{item.category?.name}</TableCell>
                                                 <TableCell>Rs. {item.price}</TableCell>
-                                                <TableCell><Chip label={item.status} size="small" color={item.status === 'Active' ? 'success' : 'default'} /></TableCell>
+                                                <TableCell><Chip label={item.status || (item.is_active === false ? 'Inactive' : 'Active')} size="small" color={(item.status === 'Active' || item.is_active !== false) ? 'success' : 'default'} /></TableCell>
                                                 <TableCell align="right">
                                                     <IconButton onClick={(e) => handleMenuOpen(e, item.id, 'item')}><MoreVertical size={18} /></IconButton>
                                                 </TableCell>
@@ -268,6 +310,10 @@ const POSSettings: React.FC = () => {
                         const cat = categories.find(c => c.id === selectedId);
                         setCurrentCategory(cat);
                         setCategoryDialog(true);
+                    } else if (menuType === 'group') {
+                        const grp = groups.find(g => g.id === selectedId);
+                        setCurrentGroup(grp);
+                        setGroupDialog(true);
                     }
                     handleMenuClose();
                 }}>Edit</MenuItem>
@@ -286,6 +332,13 @@ const POSSettings: React.FC = () => {
                             <MenuItem value="BOT">BOT</MenuItem>
                         </Select>
                     </FormControl>
+                    <FormControl fullWidth>
+                        <InputLabel>Status</InputLabel>
+                        <Select label="Status" value={currentCategory.status || (currentCategory.is_active === false ? 'Inactive' : 'Active')} onChange={(e: any) => setCurrentCategory({ ...currentCategory, status: e.target.value })}>
+                            <MenuItem value="Active">Active</MenuItem>
+                            <MenuItem value="Inactive">Inactive</MenuItem>
+                        </Select>
+                    </FormControl>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setCategoryDialog(false)}>Cancel</Button>
@@ -301,6 +354,13 @@ const POSSettings: React.FC = () => {
                         <InputLabel>Category</InputLabel>
                         <Select label="Category" value={currentGroup.category_id} onChange={(e: any) => setCurrentGroup({ ...currentGroup, category_id: e.target.value })}>
                             {categories.map(cat => <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>)}
+                        </Select>
+                    </FormControl>
+                    <FormControl fullWidth>
+                        <InputLabel>Status</InputLabel>
+                        <Select label="Status" value={currentGroup.status || (currentGroup.is_active === false ? 'Inactive' : 'Active')} onChange={(e: any) => setCurrentGroup({ ...currentGroup, status: e.target.value })}>
+                            <MenuItem value="Active">Active</MenuItem>
+                            <MenuItem value="Inactive">Inactive</MenuItem>
                         </Select>
                     </FormControl>
                 </DialogContent>
@@ -325,6 +385,13 @@ const POSSettings: React.FC = () => {
                         <InputLabel>Group</InputLabel>
                         <Select label="Group" value={currentItem.group_id} onChange={(e: any) => setCurrentItem({ ...currentItem, group_id: e.target.value })}>
                             {groups.filter(g => g.category_id === currentItem.category_id).map(g => <MenuItem key={g.id} value={g.id}>{g.name}</MenuItem>)}
+                        </Select>
+                    </FormControl>
+                    <FormControl fullWidth>
+                        <InputLabel>Status</InputLabel>
+                        <Select label="Status" value={currentItem.status || (currentItem.is_active === false ? 'Inactive' : 'Active')} onChange={(e: any) => setCurrentItem({ ...currentItem, status: e.target.value })}>
+                            <MenuItem value="Active">Active</MenuItem>
+                            <MenuItem value="Inactive">Inactive</MenuItem>
                         </Select>
                     </FormControl>
                 </DialogContent>

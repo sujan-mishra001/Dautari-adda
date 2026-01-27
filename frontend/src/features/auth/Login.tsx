@@ -36,7 +36,7 @@ const Login: React.FC = () => {
 
     return (
         <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>Sign In</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 800, mb: 1, color: '#1e293b' }}>Welcome Back</Typography>
 
             {error && <Alert severity="error">{error}</Alert>}
 
@@ -83,7 +83,7 @@ const Login: React.FC = () => {
                     textTransform: 'none'
                 }}
             >
-                {isLoading ? <Loader2 className="animate-spin" size={24} /> : 'Login to My Branch'}
+                {isLoading ? <Loader2 className="animate-spin" size={24} /> : 'Login to DigiBusi'}
             </Button>
 
             <Box sx={{ textAlign: 'center', mt: 2 }}>

@@ -102,10 +102,11 @@ const OrderTaking: React.FC = () => {
             setCustomers(custRes.data || []);
 
             const activeCategories = catsRes.data.filter((c: any) => c.is_active !== false);
+            const activeGroups = groupsRes.data.filter((g: any) => g.is_active !== false);
             const activeItems = itemsRes.data.filter((i: any) => i.is_active !== false);
 
             setCategories(activeCategories);
-            setGroups(groupsRes.data);
+            setGroups(activeGroups);
             setAllItems(activeItems);
 
             if (activeCategories.length > 0) {

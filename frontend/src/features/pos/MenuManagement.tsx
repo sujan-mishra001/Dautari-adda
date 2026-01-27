@@ -108,21 +108,40 @@ const MenuManagement: React.FC = () => {
     const handleSave = async () => {
         try {
             if (tab === 0) { // Items
-                const payload = { ...itemForm, price: parseFloat(itemForm.price) };
+                const payload = {
+                    name: itemForm.name,
+                    price: parseFloat(itemForm.price as any),
+                    category_id: Number(itemForm.category_id),
+                    group_id: itemForm.group_id ? Number(itemForm.group_id) : null,
+                    description: itemForm.description,
+                    is_active: itemForm.is_active
+                };
                 if (editingItem) await menuAPI.updateItem(editingItem.id, payload);
                 else await menuAPI.createItem(payload);
             } else if (tab === 1) { // Categories
-                if (editingItem) await menuAPI.updateCategory(editingItem.id, categoryForm);
-                else await menuAPI.createCategory(categoryForm);
+                const payload = {
+                    name: categoryForm.name,
+                    description: categoryForm.description,
+                    is_active: categoryForm.is_active,
+                    type: 'KOT' // Default type if not in form
+                };
+                if (editingItem) await menuAPI.updateCategory(editingItem.id, payload);
+                else await menuAPI.createCategory(payload);
             } else { // Groups
-                if (editingItem) await menuAPI.updateGroup(editingItem.id, groupForm);
-                else await menuAPI.createGroup(groupForm);
+                const payload = {
+                    name: groupForm.name,
+                    description: groupForm.description,
+                    is_active: groupForm.is_active,
+                    category_id: Number(categories[0]?.id) // Defaulting to first category if not specified
+                };
+                if (editingItem) await menuAPI.updateGroup(editingItem.id, payload);
+                else await menuAPI.createGroup(payload);
             }
             setOpenAddItem(false);
             loadData();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error saving:', error);
-            alert('Failed to save');
+            alert(error.response?.data?.detail || 'Failed to save');
         }
     };
 

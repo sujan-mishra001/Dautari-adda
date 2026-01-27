@@ -142,11 +142,36 @@ async def update_order(
     
     old_status = order.status
     
-    for key, value in order_data.items():
-        setattr(order, key, value)
+    # Separate items if they exist
+    items_data = order_data.pop('items', None)
     
-    # Recalculate net amount if gross or discount changed
-    if 'gross_amount' in order_data or 'discount' in order_data:
+    for key, value in order_data.items():
+        if hasattr(order, key):
+            setattr(order, key, value)
+    
+    # Update items if provided
+    if items_data is not None:
+        # Simple approach: clear and re-add
+        # For a more robust system, we would diff them.
+        db.query(OrderItem).filter(OrderItem.order_id == order.id).delete()
+        for item_data in items_data:
+            new_order_item = OrderItem(
+                order_id=order.id,
+                menu_item_id=item_data['menu_item_id'],
+                quantity=item_data['quantity'],
+                price=item_data.get('price', 0),
+                subtotal=item_data.get('subtotal', item_data.get('price', 0) * item_data['quantity']),
+                notes=item_data.get('notes', '')
+            )
+            db.add(new_order_item)
+    
+    # Recalculate amounts if items were updated or specific amounts provided
+    if items_data is not None:
+        total = sum(item['price'] * item['quantity'] for item in items_data)
+        order.gross_amount = total
+        order.net_amount = total - order.discount
+        order.total_amount = order.net_amount
+    elif 'gross_amount' in order_data or 'discount' in order_data:
         order.net_amount = order.gross_amount - order.discount
         order.total_amount = order.net_amount
     
@@ -193,7 +218,8 @@ async def update_order(
     # Reload with relationships
     updated_order = db.query(Order).options(
         joinedload(Order.table),
-        joinedload(Order.customer)
+        joinedload(Order.customer),
+        joinedload(Order.items).joinedload(OrderItem.menu_item)
     ).filter(Order.id == order_id).first()
     
     return updated_order

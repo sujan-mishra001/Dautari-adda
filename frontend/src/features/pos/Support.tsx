@@ -9,7 +9,7 @@ const Support: React.FC = () => {
             <Container maxWidth="lg">
                 <Box sx={{ mb: 4 }}>
                     <Typography variant="h4" fontWeight={800} sx={{ mb: 1 }}>
-                        Support Center
+                        DigiBusi Support Center
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
                         Need help? We're here to assist you.
@@ -83,7 +83,7 @@ const Support: React.FC = () => {
                             Send us an email and we'll get back to you within 24 hours.
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                            support@ratala.com
+                            support@digibusi.com
                         </Typography>
                     </Paper>
 
@@ -118,7 +118,7 @@ const Support: React.FC = () => {
                             Call us directly for urgent matters and technical support.
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                            +977 1-234-5678
+                            +977 1-591-2345
                         </Typography>
                     </Paper>
 

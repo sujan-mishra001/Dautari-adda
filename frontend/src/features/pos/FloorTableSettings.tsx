@@ -60,6 +60,8 @@ interface TableData {
     status: string;
     is_active: boolean;
     display_order: number;
+    is_hold_table: string;
+    hold_table_name: string | null;
 }
 
 const FloorTableSettings: React.FC = () => {
@@ -82,7 +84,9 @@ const FloorTableSettings: React.FC = () => {
         table_type: 'Regular',
         capacity: 4,
         status: 'Available',
-        is_active: true
+        is_active: true,
+        is_hold_table: 'No',
+        hold_table_name: ''
     });
 
     // Notifications
@@ -181,7 +185,9 @@ const FloorTableSettings: React.FC = () => {
                 table_type: table.table_type,
                 capacity: table.capacity,
                 status: table.status,
-                is_active: table.is_active
+                is_active: table.is_active,
+                is_hold_table: table.is_hold_table || 'No',
+                hold_table_name: table.hold_table_name || ''
             });
         } else {
             setEditingTable(null);
@@ -191,7 +197,9 @@ const FloorTableSettings: React.FC = () => {
                 table_type: 'Regular',
                 capacity: 4,
                 status: 'Available',
-                is_active: true
+                is_active: true,
+                is_hold_table: 'No',
+                hold_table_name: ''
             });
         }
         setTableDialogOpen(true);
@@ -414,6 +422,17 @@ const FloorTableSettings: React.FC = () => {
                                                         }}
                                                     />
                                                 </TableCell>
+                                                <TableCell>
+                                                    <Chip
+                                                        label={table.is_hold_table === 'Yes' ? 'Hold' : 'Regular'}
+                                                        size="small"
+                                                        sx={{
+                                                            bgcolor: table.is_hold_table === 'Yes' ? '#fee2e2' : '#f1f5f9',
+                                                            color: table.is_hold_table === 'Yes' ? '#ef4444' : '#64748b',
+                                                            fontWeight: 600
+                                                        }}
+                                                    />
+                                                </TableCell>
                                                 <TableCell>{table.capacity}</TableCell>
                                                 <TableCell>
                                                     <Chip
@@ -564,6 +583,27 @@ const FloorTableSettings: React.FC = () => {
                             }
                             label="Active"
                         />
+
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={tableForm.is_hold_table === 'Yes'}
+                                    onChange={(e) => setTableForm({ ...tableForm, is_hold_table: e.target.checked ? 'Yes' : 'No' })}
+                                    color="error"
+                                />
+                            }
+                            label="Set as Hold Table"
+                        />
+
+                        {tableForm.is_hold_table === 'Yes' && (
+                            <TextField
+                                fullWidth
+                                label="Hold Table Name"
+                                value={tableForm.hold_table_name}
+                                onChange={(e) => setTableForm({ ...tableForm, hold_table_name: e.target.value })}
+                                placeholder="e.g., Takeaway 1, Delivery A"
+                            />
+                        )}
                     </Box>
                 </DialogContent>
                 <DialogActions sx={{ p: 3 }}>

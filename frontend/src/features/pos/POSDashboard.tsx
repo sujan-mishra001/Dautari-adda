@@ -39,6 +39,8 @@ interface TableData {
     active_order_id: number | null;
     total_amount: number;
     order_start_time?: string;
+    is_hold_table: string;
+    hold_table_name: string | null;
 }
 
 // Table Card Component
@@ -201,9 +203,9 @@ const POSDashboard: React.FC = () => {
     };
 
     // Filter tables by selected floor
-    const filteredTables = selectedFloorId
-        ? tables.filter(t => t.floor_id === selectedFloorId)
-        : [];
+    const filteredTables = selectedFloorId === -1
+        ? tables.filter(t => t.is_hold_table === 'Yes')
+        : tables.filter(t => t.floor_id === selectedFloorId);
     return (
         <Box sx={{ display: 'flex', height: '100vh', bgcolor: '#f8fafc', overflow: 'hidden' }}>
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', borderRight: '1px solid #e2e8f0', overflow: 'hidden' }}>
@@ -237,7 +239,7 @@ const POSDashboard: React.FC = () => {
                             {floors.map(floor => (
                                 <Tab key={floor.id} label={floor.name} value={floor.id} disableRipple />
                             ))}
-                            <Tab label="Hold Table" value={-1} disableRipple disabled />
+                            <Tab label="Hold Table" value={-1} />
                         </Tabs>
 
                         <IconButton onClick={() => loadData()}>
@@ -343,6 +345,14 @@ const POSDashboard: React.FC = () => {
                     <Button
                         fullWidth
                         variant="contained"
+                        onClick={() => {
+                            const availableHoldTable = tables.find(t => t.is_hold_table === 'Yes' && t.active_order_id === null);
+                            if (availableHoldTable) {
+                                handleTableClick(availableHoldTable);
+                            } else {
+                                alert("No available hold tables. Please clear some first.");
+                            }
+                        }}
                         sx={{
                             bgcolor: '#FF8C00', // Orange
                             '&:hover': { bgcolor: '#e67e00' },

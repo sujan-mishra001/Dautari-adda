@@ -1,5 +1,4 @@
-import React from 'react';
-import { Box, Paper, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 
 const AuthLayout: React.FC = () => {
@@ -8,31 +7,65 @@ const AuthLayout: React.FC = () => {
             sx={{
                 minHeight: '100vh',
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
                 bgcolor: '#f8fafc',
-                p: 2,
-                background: 'linear-gradient(135deg, #FF8C00 0%, #FFA500 100%)'
+                overflow: 'hidden'
             }}
         >
-            <Paper
-                elevation={0}
+            {/* Left side - Image */}
+            <Box
                 sx={{
-                    width: '100%',
-                    maxWidth: 450,
-                    borderRadius: '24px',
-                    overflow: 'hidden',
-                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                    width: '60%',
+                    height: '100vh',
+                    display: { xs: 'none', md: 'block' },
+                    backgroundImage: 'url("/Cafe.jpeg")',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    position: 'relative',
+                    '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        bgcolor: 'rgba(0,0,0,0.3)', // Subtle overlay
+                    }
+                }}
+            />
+
+            {/* Right side - Content */}
+            <Box
+                sx={{
+                    width: { xs: '100%', md: '40%' },
+                    height: '100vh',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    bgcolor: 'white',
+                    p: 4
                 }}
             >
-                <Box sx={{ p: 4 }}>
-                    <Box sx={{ textAlign: 'center', mb: 4 }}>
-                        <Typography variant="h4" sx={{ fontWeight: 900, color: '#FF8C00', mb: 1 }}>Dautari Adda</Typography>
-                        <Typography variant="body2" color="text.secondary">Restaurant Management System</Typography>
+                <Box sx={{ width: '100%', maxWidth: 400 }}>
+                    <Box sx={{ mb: 4, textAlign: 'left' }}>
+                        <Typography
+                            variant="h3"
+                            sx={{
+                                fontWeight: 900,
+                                color: '#FF8C00',
+                                mb: 0.5,
+                                letterSpacing: '-0.5px'
+                            }}
+                        >
+                            DigiBusi
+                        </Typography>
+                        <Typography variant="body1" sx={{ color: '#64748b', fontWeight: 500 }}>
+                            Digital Business Management Platform
+                        </Typography>
                     </Box>
                     <Outlet />
                 </Box>
-            </Paper>
+            </Box>
         </Box>
     );
 };
