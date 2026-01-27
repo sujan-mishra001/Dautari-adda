@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Tooltip, IconButton, Avatar, Typography, Menu, MenuItem, ListItemIcon, Divider } from '@mui/material';
+import { Box, Tooltip, IconButton, Avatar, Typography, Menu, MenuItem, ListItemIcon, Divider, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@mui/material';
 import {
     Grid2X2,
     Utensils,
@@ -19,6 +19,7 @@ const POSLayout: React.FC = () => {
     const location = useLocation();
     const { logout, user } = useAuth();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
     const open = Boolean(anchorEl);
 
 
@@ -177,7 +178,7 @@ const POSLayout: React.FC = () => {
                             Support
                         </MenuItem>
                         <Divider sx={{ my: 0.5, borderColor: '#f1f5f9' }} />
-                        <MenuItem onClick={() => { logout(); navigate('/login'); }} sx={{ py: 1, gap: 1.5, fontSize: '14px', fontWeight: 600, color: '#ef4444' }}>
+                        <MenuItem onClick={() => setLogoutDialogOpen(true)} sx={{ py: 1, gap: 1.5, fontSize: '14px', fontWeight: 600, color: '#ef4444' }}>
                             <ListItemIcon sx={{ minWidth: 'auto !important' }}>
                                 <LogOut size={18} color="#ef4444" />
                             </ListItemIcon>
@@ -195,6 +196,47 @@ const POSLayout: React.FC = () => {
                 width: 'calc(100% - 80px)'
             }}>
                 <Outlet />
+
+                {/* Logout Confirmation Dialog */}
+                <Dialog
+                    open={logoutDialogOpen}
+                    onClose={() => setLogoutDialogOpen(false)}
+                    PaperProps={{
+                        sx: { borderRadius: '16px', p: 1 }
+                    }}
+                >
+                    <DialogTitle sx={{ fontWeight: 800 }}>Confirm Logout</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText sx={{ fontWeight: 500, color: '#64748b' }}>
+                            Are you really want to logout?
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 2, gap: 1 }}>
+                        <Button
+                            onClick={() => setLogoutDialogOpen(false)}
+                            sx={{ color: '#64748b', fontWeight: 700, textTransform: 'none' }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                logout();
+                                navigate('/login');
+                            }}
+                            variant="contained"
+                            sx={{
+                                bgcolor: '#ef4444',
+                                '&:hover': { bgcolor: '#dc2626' },
+                                fontWeight: 700,
+                                textTransform: 'none',
+                                borderRadius: '10px',
+                                px: 3
+                            }}
+                        >
+                            Logout
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </Box>
         </Box>
     );

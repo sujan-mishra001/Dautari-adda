@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, AppBar, Toolbar, Typography, IconButton, Avatar, Menu, MenuItem, Divider, Button, Tooltip } from '@mui/material';
+import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, AppBar, Toolbar, Typography, IconButton, Avatar, Menu, MenuItem, Divider, Button, Tooltip, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import {
     LayoutDashboard,
     Store,
@@ -34,6 +34,7 @@ const AdminLayout: React.FC = () => {
     // State for collapsible submenus
     const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
@@ -57,6 +58,11 @@ const AdminLayout: React.FC = () => {
     };
 
     const handleLogout = () => {
+        setLogoutDialogOpen(true);
+        handleClose();
+    };
+
+    const confirmLogout = () => {
         logout();
         navigate('/login');
     };
@@ -187,15 +193,13 @@ const AdminLayout: React.FC = () => {
     const drawerContent = (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'white' }}>
             <Box sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {/* Logo Area */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Avatar
-                        src="/logo.png"
-                        sx={{ width: 40, height: 40, borderRadius: '8px' }}
-                        variant="square"
-                    />
-                    <Typography variant="h6" fontWeight={800} color="#FF8C00">
-                        Dautari Adda
+                {/* Welcome Message Instead of Logo */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', px: 1 }}>
+                    <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ textTransform: 'uppercase', letterSpacing: 0.5, mb: 0.5 }}>
+                        Welcome to
+                    </Typography>
+                    <Typography variant="h6" fontWeight={800} color="#FF8C00" sx={{ lineHeight: 1.2, wordBreak: 'break-word' }}>
+                        {currentBranch?.name || 'Dautari Adda'}
                     </Typography>
                 </Box>
             </Box>
@@ -398,6 +402,44 @@ const AdminLayout: React.FC = () => {
             <Box component="main" sx={{ flexGrow: 1, p: 3, pt: 10, bgcolor: '#f8fafc', minHeight: '100vh', width: { lg: `calc(100% - ${drawerWidth}px)` } }}>
                 <Outlet />
             </Box>
+
+            {/* Logout Confirmation Dialog */}
+            <Dialog
+                open={logoutDialogOpen}
+                onClose={() => setLogoutDialogOpen(false)}
+                PaperProps={{
+                    sx: { borderRadius: '16px', p: 1 }
+                }}
+            >
+                <DialogTitle sx={{ fontWeight: 800 }}>Confirm Logout</DialogTitle>
+                <DialogContent>
+                    <DialogContentText sx={{ fontWeight: 500, color: '#64748b' }}>
+                        Are you really want to logout?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions sx={{ p: 2, gap: 1 }}>
+                    <Button
+                        onClick={() => setLogoutDialogOpen(false)}
+                        sx={{ color: '#64748b', fontWeight: 700, textTransform: 'none' }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={confirmLogout}
+                        variant="contained"
+                        sx={{
+                            bgcolor: '#ef4444',
+                            '&:hover': { bgcolor: '#dc2626' },
+                            fontWeight: 700,
+                            textTransform: 'none',
+                            borderRadius: '10px',
+                            px: 3
+                        }}
+                    >
+                        Logout
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

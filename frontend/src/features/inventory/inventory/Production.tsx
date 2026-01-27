@@ -87,7 +87,7 @@ const Production: React.FC = () => {
     return (
         <Box>
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h5" fontWeight={800}>Batch Production</Typography>
+                <Typography variant="h4" sx={{ fontWeight: 800, color: '#1e293b' }}>Batch Production</Typography>
                 <Button
                     variant="contained"
                     startIcon={<Plus size={18} />}

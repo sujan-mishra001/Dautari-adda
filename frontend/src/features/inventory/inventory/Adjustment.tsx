@@ -18,7 +18,6 @@ import {
     MenuItem
 } from '@mui/material';
 import { Plus, X } from 'lucide-react';
-import DashboardLayout from '../../../components/layout/DashboardLayout';
 import { inventoryAPI } from '../../../services/api';
 
 const Adjustment: React.FC = () => {
@@ -79,9 +78,9 @@ const Adjustment: React.FC = () => {
     };
 
     return (
-        <DashboardLayout>
+        <Box>
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h5" fontWeight={800}>Inventory Adjustment</Typography>
+                <Typography variant="h4" sx={{ fontWeight: 800, color: '#1e293b' }}>Inventory Adjustment</Typography>
                 <Button
                     variant="contained"
                     startIcon={<Plus size={18} />}
@@ -174,8 +173,9 @@ const Adjustment: React.FC = () => {
                     </Box>
                 </DialogContent>
             </Dialog>
-        </DashboardLayout>
+        </Box>
     );
 };
 
 export default Adjustment;
+

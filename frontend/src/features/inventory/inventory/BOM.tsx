@@ -18,7 +18,6 @@ import {
     MenuItem
 } from '@mui/material';
 import { Plus, X, Edit, Trash2 } from 'lucide-react';
-import DashboardLayout from '../../../components/layout/DashboardLayout';
 import { inventoryAPI, menuAPI } from '../../../services/api';
 
 const BOM: React.FC = () => {
@@ -84,9 +83,9 @@ const BOM: React.FC = () => {
     };
 
     return (
-        <DashboardLayout>
+        <Box>
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h5" fontWeight={800}>Bills of Materials</Typography>
+                <Typography variant="h4" sx={{ fontWeight: 800, color: '#1e293b' }}>Bills of Materials</Typography>
                 <Button
                     variant="contained"
                     startIcon={<Plus size={18} />}
@@ -175,8 +174,9 @@ const BOM: React.FC = () => {
                     </Box>
                 </DialogContent>
             </Dialog>
-        </DashboardLayout>
+        </Box>
     );
 };
 
 export default BOM;
+

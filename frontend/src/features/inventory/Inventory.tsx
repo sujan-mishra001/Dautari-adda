@@ -60,7 +60,7 @@ const Inventory: React.FC = () => {
     return (
         <Box>
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h5" fontWeight={800}>Inventory Management</Typography>
+                <Typography variant="h4" sx={{ fontWeight: 800, color: '#1e293b' }}>Inventory Management</Typography>
                 <Box sx={{ display: 'flex', gap: 2 }}>
                     <Button
                         variant="outlined"

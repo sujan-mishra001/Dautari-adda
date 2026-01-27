@@ -18,7 +18,6 @@ import {
     MenuItem
 } from '@mui/material';
 import { Plus, X } from 'lucide-react';
-import DashboardLayout from '../../../components/layout/DashboardLayout';
 import { purchaseAPI } from '../../../services/api';
 
 const PurchaseReturn: React.FC = () => {
@@ -76,9 +75,9 @@ const PurchaseReturn: React.FC = () => {
     };
 
     return (
-        <DashboardLayout>
+        <Box>
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h5" fontWeight={800}>Purchase Returns</Typography>
+                <Typography variant="h4" sx={{ fontWeight: 800, color: '#1e293b' }}>Purchase Returns</Typography>
                 <Button
                     variant="contained"
                     startIcon={<Plus size={18} />}
@@ -173,8 +172,9 @@ const PurchaseReturn: React.FC = () => {
                     </Box>
                 </DialogContent>
             </Dialog>
-        </DashboardLayout>
+        </Box>
     );
 };
 
 export default PurchaseReturn;
+

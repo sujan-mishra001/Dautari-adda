@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Box,
     Typography,
@@ -14,8 +14,8 @@ import {
     Stack,
     CircularProgress,
     Dialog,
-    DialogTitle,
     DialogContent,
+    DialogTitle,
     DialogActions,
     Snackbar,
     Alert,
@@ -23,8 +23,12 @@ import {
     Chip,
     Tooltip
 } from '@mui/material';
-import { Eye, Printer, X, Trash2, RotateCcw } from 'lucide-react';
+import { Eye, Printer, X, Trash2, RotateCcw, Download } from 'lucide-react';
 import { ordersAPI } from '../../services/api';
+import { useReactToPrint } from 'react-to-print';
+import BillView from '../pos/billing/BillView';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 const TABS = ['Table', 'Self Delivery', 'Delivery Partner', 'Takeaway', 'Pay First'];
 
@@ -53,6 +57,40 @@ const Orders: React.FC = () => {
     const [viewDialogOpen, setViewDialogOpen] = useState(false);
     const [processing, setProcessing] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+    const [billDialogOpen, setBillDialogOpen] = useState(false);
+    const billRef = useRef<HTMLDivElement>(null);
+
+    const handlePrint = useReactToPrint({
+        contentRef: billRef,
+        documentTitle: `Bill_${selectedOrder?.order_number}`,
+        onPrintError: () => alert("Printer not found or error occurred while printing.")
+    });
+
+    const handleDownloadPDF = async () => {
+        if (!billRef.current) return;
+        try {
+            const canvas = await html2canvas(billRef.current, { scale: 2 });
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF({ unit: 'mm', format: [80, 200] });
+            const imgProps = pdf.getImageProperties(imgData);
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`Bill_${selectedOrder?.order_number}.pdf`);
+        } catch (error) {
+            console.error("PDF Export Error:", error);
+        }
+    };
+
+    const handlePrintClick = async (order: Order) => {
+        try {
+            const response = await ordersAPI.getById(order.id);
+            setSelectedOrder(response.data || response);
+            setBillDialogOpen(true);
+        } catch (error) {
+            setSnackbar({ open: true, message: 'Failed to load order for printing', severity: 'error' });
+        }
+    };
 
     const fetchOrders = async () => {
         try {
@@ -210,7 +248,13 @@ const Orders: React.FC = () => {
                                                 <IconButton size="small" sx={{ color: '#FF8C00' }} onClick={() => handleView(order)}><Eye size={16} /></IconButton>
                                             </Tooltip>
                                             <Tooltip title="Print Bill">
-                                                <IconButton size="small" sx={{ color: '#64748b' }}><Printer size={16} /></IconButton>
+                                                <IconButton
+                                                    size="small"
+                                                    sx={{ color: '#64748b' }}
+                                                    onClick={() => handlePrintClick(order)}
+                                                >
+                                                    <Printer size={16} />
+                                                </IconButton>
                                             </Tooltip>
                                             {order.status !== 'Cancelled' && (
                                                 <Tooltip title="Cancel Order">
@@ -300,8 +344,62 @@ const Orders: React.FC = () => {
                     )}
                 </DialogContent>
                 <DialogActions sx={{ p: 3, bgcolor: '#f8fafc' }}>
-                    <Button variant="outlined" startIcon={<Printer size={18} />} sx={{ borderRadius: '10px', textTransform: 'none' }}>Print Invoice</Button>
+                    <Button
+                        variant="outlined"
+                        startIcon={<Printer size={18} />}
+                        onClick={() => {
+                            setViewDialogOpen(false);
+                            setBillDialogOpen(true);
+                        }}
+                        sx={{ borderRadius: '10px', textTransform: 'none' }}
+                    >
+                        Print Invoice
+                    </Button>
                     <Button variant="contained" onClick={() => setViewDialogOpen(false)} sx={{ bgcolor: '#FF8C00', borderRadius: '10px', textTransform: 'none', px: 4 }}>Close</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Bill Preview Dialog */}
+            <Dialog
+                open={billDialogOpen}
+                onClose={() => setBillDialogOpen(false)}
+                maxWidth="xs"
+                fullWidth
+                PaperProps={{ sx: { borderRadius: '16px' } }}
+            >
+                <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9' }}>
+                    <Typography variant="h6" fontWeight={800}>Bill Preview</Typography>
+                    <IconButton onClick={() => setBillDialogOpen(false)} size="small"><X size={20} /></IconButton>
+                </Box>
+                <DialogContent sx={{ p: 0, bgcolor: '#f8fafc' }}>
+                    <Box sx={{ p: 2 }}>
+                        <Paper elevation={0} sx={{ p: 0, overflow: 'hidden', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                            <BillView
+                                ref={billRef}
+                                order={selectedOrder}
+                            />
+                        </Paper>
+                    </Box>
+                </DialogContent>
+                <DialogActions sx={{ p: 2, gap: 1 }}>
+                    <Button
+                        fullWidth
+                        variant="outlined"
+                        startIcon={<Download size={18} />}
+                        onClick={handleDownloadPDF}
+                        sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700 }}
+                    >
+                        Save as PDF
+                    </Button>
+                    <Button
+                        fullWidth
+                        variant="contained"
+                        startIcon={<Printer size={18} />}
+                        onClick={() => handlePrint()}
+                        sx={{ borderRadius: '10px', bgcolor: '#FF8C00', '&:hover': { bgcolor: '#FF7700' }, textTransform: 'none', fontWeight: 700 }}
+                    >
+                        Print Bill
+                    </Button>
                 </DialogActions>
             </Dialog>
 

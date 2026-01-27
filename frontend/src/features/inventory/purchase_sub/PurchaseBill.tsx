@@ -13,7 +13,6 @@ import {
     Chip
 } from '@mui/material';
 import { Plus, FileText } from 'lucide-react';
-import DashboardLayout from '../../../components/layout/DashboardLayout';
 import { purchaseAPI } from '../../../services/api';
 
 const PurchaseBill: React.FC = () => {
@@ -38,10 +37,10 @@ const PurchaseBill: React.FC = () => {
     };
 
     return (
-        <DashboardLayout>
+        <Box>
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Box>
-                    <Typography variant="h5" fontWeight={800}>Purchase Bills</Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 800, color: '#1e293b' }}>Purchase Bills</Typography>
                     <Typography variant="body2" color="text.secondary">Manage purchase orders and bills</Typography>
                 </Box>
                 <Button
@@ -103,8 +102,9 @@ const PurchaseBill: React.FC = () => {
                     </TableBody>
                 </Table>
             </TableContainer>
-        </DashboardLayout>
+        </Box>
     );
 };
 
 export default PurchaseBill;
+
