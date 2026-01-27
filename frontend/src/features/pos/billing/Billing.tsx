@@ -158,6 +158,7 @@ const Billing: React.FC = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
                             {table?.hold_table_name || `TABLE ${table?.table_id}`} • {formatTime(currentTime)}
+                            {order?.created_at && ` • Started at ${new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                         </Typography>
                         {order?.customer && (
                             <>

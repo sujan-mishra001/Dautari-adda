@@ -15,7 +15,7 @@ class Floor(Base):
     name = Column(String, unique=True, nullable=False)  # e.g., "Ground Floor", "Rooftop"
     display_order = Column(Integer, default=0)  # For ordering floors in UI
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
     
     tables = relationship("Table", back_populates="floor_rel")
 
@@ -35,8 +35,8 @@ class Table(Base):
     display_order = Column(Integer, default=0)
     is_hold_table = Column(String, default="No")  # Yes, No - for hold tables
     hold_table_name = Column(String, nullable=True)  # Unique name for hold table
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     
     floor_rel = relationship("Floor", back_populates="tables")
 
@@ -50,7 +50,7 @@ class Session(Base):
     start_time = Column(String, nullable=False)  # e.g., "09:00"
     end_time = Column(String, nullable=False)  # e.g., "17:00"
     status = Column(String, default="Active")
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
 
 
 class Order(Base):
@@ -72,8 +72,8 @@ class Order(Base):
     payment_type = Column(String, nullable=True)  # Cash, Fonepay, Credit Card, etc.
     session_id = Column(Integer, ForeignKey("sessions.id"), nullable=True)
     created_by = Column(Integer, ForeignKey("users.id"))
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     
     table = relationship("Table")
     customer = relationship("Customer")
@@ -94,7 +94,7 @@ class OrderItem(Base):
     price = Column(Float, nullable=False)
     subtotal = Column(Float, nullable=False)
     notes = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
     
     order = relationship("Order", back_populates="items")
     menu_item = relationship("MenuItem")
@@ -110,8 +110,8 @@ class KOT(Base):
     kot_type = Column(String, default="KOT")  # KOT or BOT
     status = Column(String, default="Pending")  # Pending, In Progress, Ready, Served
     created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     
     order = relationship("Order", back_populates="kots")
     user = relationship("User")
@@ -127,7 +127,7 @@ class KOTItem(Base):
     menu_item_id = Column(Integer, ForeignKey("menu_items.id"))
     quantity = Column(Integer, nullable=False)
     notes = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
     
     kot = relationship("KOT", back_populates="items")
     menu_item = relationship("MenuItem")

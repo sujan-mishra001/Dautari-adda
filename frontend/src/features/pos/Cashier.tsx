@@ -81,9 +81,10 @@ const Cashier: React.FC = () => {
                 <Table>
                     <TableHead sx={{ bgcolor: '#f8fafc' }}>
                         <TableRow>
-                            <TableCell sx={{ fontWeight: 700 }}>Order Number</TableCell>
+                            <TableCell sx={{ fontWeight: 700 }}>Order ID</TableCell>
                             <TableCell sx={{ fontWeight: 700 }}>Table/Customer</TableCell>
                             <TableCell sx={{ fontWeight: 700 }}>Order Type</TableCell>
+                            <TableCell sx={{ fontWeight: 700 }}>Order Time</TableCell>
                             <TableCell sx={{ fontWeight: 700 }}>Total Amount</TableCell>
                             <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
                             <TableCell sx={{ fontWeight: 700 }} align="right">Actions</TableCell>
@@ -115,6 +116,9 @@ const Cashier: React.FC = () => {
                                         </Box>
                                     </TableCell>
                                     <TableCell>{order.order_type || 'N/A'}</TableCell>
+                                    <TableCell>
+                                        {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </TableCell>
                                     <TableCell sx={{ fontWeight: 700 }}>रू {order.net_amount?.toLocaleString() || 0}</TableCell>
                                     <TableCell>
                                         <Chip

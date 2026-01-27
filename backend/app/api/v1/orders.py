@@ -112,7 +112,7 @@ async def create_order(
             customer.total_visits += 1
             customer.total_spent += new_order.net_amount
             customer.due_amount += new_order.credit_amount
-            customer.updated_at = datetime.utcnow()
+            customer.updated_at = datetime.now()
 
     db.commit()
     db.refresh(new_order)
@@ -170,7 +170,7 @@ async def update_order(
                     customer.total_visits += 1
                     customer.total_spent += order.net_amount
                     customer.due_amount += order.credit_amount
-                    customer.updated_at = datetime.utcnow()
+                    customer.updated_at = datetime.now()
                     
         elif new_status == 'Cancelled':
             # Optionally mark KOTs as Cancelled too? The user didn't ask, but it makes sense.

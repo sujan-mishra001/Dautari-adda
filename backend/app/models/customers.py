@@ -19,5 +19,5 @@ class Customer(Base):
     total_spent = Column(Float, default=0.0)
     total_visits = Column(Integer, default=0)
     due_amount = Column(Float, default=0.0)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
