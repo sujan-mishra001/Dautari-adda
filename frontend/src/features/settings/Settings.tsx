@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Box,
     Typography,
@@ -21,7 +22,9 @@ import {
     TableRow,
     InputAdornment,
     Avatar,
-    CircularProgress
+    CircularProgress,
+    Chip,
+    IconButton
 } from '@mui/material';
 import {
     Settings as SettingsIcon,
@@ -43,11 +46,15 @@ import {
     Monitor,
     Search,
     Save,
-    ChevronRight
+    ChevronRight,
+    Plus,
+    MoreVertical,
+    MapPin
 } from 'lucide-react';
-import { menuAPI, settingsAPI } from '../../services/api';
+import { menuAPI, settingsAPI, branchAPI } from '../../services/api';
 
 const Settings: React.FC = () => {
+    const navigate = useNavigate();
     const [mainTab, setMainTab] = useState(0); // 0: General, 1: Restaurant
     const [subTab, setSubTab] = useState('company-profile');
     const [loading, setLoading] = useState(false);
@@ -57,11 +64,16 @@ const Settings: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [updatedPrices, setUpdatedPrices] = useState<{ [key: number]: number }>({});
 
+    // States for Branch Management
+    const [branches, setBranches] = useState<any[]>([]);
+
     useEffect(() => {
         if (mainTab === 0 && subTab === 'company-profile') {
             loadCompanySettings();
         } else if (mainTab === 1 && subTab === 'update-menu-rate') {
             loadMenuItems();
+        } else if (mainTab === 1 && subTab === 'add-branches') {
+            loadBranches();
         }
     }, [mainTab, subTab]);
 
@@ -84,6 +96,18 @@ const Settings: React.FC = () => {
             setMenuItems(res.data || []);
         } catch (error) {
             console.error('Error loading menu items:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadBranches = async () => {
+        try {
+            setLoading(true);
+            const res = await branchAPI.getAll();
+            setBranches(res.data || []);
+        } catch (error) {
+            console.error('Error loading branches:', error);
         } finally {
             setLoading(false);
         }
@@ -372,6 +396,64 @@ const Settings: React.FC = () => {
         </Box>
     );
 
+    const renderBranchManagement = () => (
+        <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h6" fontWeight={800}>Manage Branches</Typography>
+                <Button
+                    variant="contained"
+                    startIcon={<Plus size={18} />}
+                    onClick={() => navigate('/branches/create')}
+                    sx={{ bgcolor: '#FF8C00', '&:hover': { bgcolor: '#FF7700' }, textTransform: 'none', borderRadius: '8px', fontWeight: 700 }}
+                >
+                    Create Branch
+                </Button>
+            </Box>
+
+            <Grid container spacing={3}>
+                {loading ? (
+                    <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', p: 4 }}>
+                        <CircularProgress sx={{ color: '#FF8C00' }} />
+                    </Box>
+                ) : branches.length === 0 ? (
+                    <Box sx={{ width: '100%', textAlign: 'center', p: 4 }}>
+                        <Typography color="text.secondary">No branches found. Create your first branch.</Typography>
+                    </Box>
+                ) : branches.map((branch) => (
+                    <Grid size={{ xs: 12, md: 6 }} key={branch.id}>
+                        <Paper sx={{ p: 2.5, borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: 'none' }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                    <Avatar sx={{ bgcolor: '#fff7ed', color: '#FF8C00', borderRadius: '8px' }}>
+                                        <Building2 size={20} />
+                                    </Avatar>
+                                    <Box>
+                                        <Typography variant="subtitle1" fontWeight={800}>{branch.name}</Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                                            <Typography variant="caption" sx={{ bgcolor: '#f1f5f9', px: 1, py: 0.2, borderRadius: '4px', fontWeight: 600, color: '#64748b' }}>
+                                                {branch.code}
+                                            </Typography>
+                                            {branch.is_primary && (
+                                                <Chip label="Primary" size="small" color="primary" sx={{ height: 20, fontSize: '0.65rem' }} />
+                                            )}
+                                        </Box>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 1 }}>
+                                            <MapPin size={14} color="#94a3b8" />
+                                            <Typography variant="caption" color="text.secondary">{branch.location || 'No location set'}</Typography>
+                                        </Box>
+                                    </Box>
+                                </Box>
+                                <IconButton size="small">
+                                    <MoreVertical size={16} />
+                                </IconButton>
+                            </Box>
+                        </Paper>
+                    </Grid>
+                ))}
+            </Grid>
+        </Box>
+    );
+
     return (
         <Box sx={{ height: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
             {/* Top Level Tabs */}
@@ -411,11 +493,12 @@ const Settings: React.FC = () => {
                                 </Box>
                             )
                         ) : (
-                            subTab === 'update-menu-rate' ? renderUpdateMenuRate() : (
-                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '400px' }}>
-                                    <Typography color="text.secondary">Configuration for <strong>{subTab}</strong> coming soon.</Typography>
-                                </Box>
-                            )
+                            subTab === 'update-menu-rate' ? renderUpdateMenuRate() :
+                                subTab === 'add-branches' ? renderBranchManagement() : (
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '400px' }}>
+                                        <Typography color="text.secondary">Configuration for <strong>{subTab}</strong> coming soon.</Typography>
+                                    </Box>
+                                )
                         )}
                     </Box>
                 </Grid>

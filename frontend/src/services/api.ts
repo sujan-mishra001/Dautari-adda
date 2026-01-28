@@ -180,6 +180,8 @@ export const reportsAPI = {
   getSalesSummary: (params?: any) => api.get('/reports/sales', { params }),
   getInventoryReport: () => api.get('/reports/inventory'),
   getDayBook: (params: any) => api.get('/reports/day-book', { params }),
+  getSessions: () => api.get('/reports/sessions'),
+  exportSessionsPDF: () => api.get('/reports/export/sessions/pdf', { responseType: 'blob' }),
   exportPDF: (type: string, params: any) => api.get(`/reports/export/pdf/${type}`, { params, responseType: 'blob' }),
   exportExcel: (type: string, params: any) => api.get(`/reports/export/excel/${type}`, { params, responseType: 'blob' }),
 };

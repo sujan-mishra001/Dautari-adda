@@ -47,6 +47,7 @@ import PurchaseReturn from '../../features/inventory/purchase_sub/PurchaseReturn
 import UserManagement from '../../features/users/UserManagement';
 import Roles from '../../features/roles/Roles';
 import Reports from '../../features/reports/Reports';
+import SessionReport from '../../features/reports/SessionReport';
 import Settings from '../../features/settings/Settings';
 
 const AppRoutes: React.FC = () => {
@@ -95,6 +96,7 @@ const AppRoutes: React.FC = () => {
                             <Route path="return" element={<PurchaseReturn />} />
                         </Route>
                         <Route path="/reports" element={<Reports />} />
+                        <Route path="/reports/sessions" element={<SessionReport />} />
                         <Route path="/settings" element={<Settings />} />
                         <Route path="/menu" element={<MenuManagement />} />
                         <Route element={<PermissionGuard allowedRoles={['admin']} />}>

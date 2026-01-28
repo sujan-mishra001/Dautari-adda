@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../app/providers/AuthProvider';
 import { authAPI } from '../../services/api';
@@ -11,8 +11,20 @@ const Login: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const { login } = useAuth();
+    const { login, user, isAuthenticated } = useAuth();
     const navigate = useNavigate();
+
+    // Redirect if already logged in
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            // Admin goes to dashboard, others go to POS tables
+            if (user.role === 'Admin') {
+                navigate('/dashboard', { replace: true });
+            } else {
+                navigate('/pos/tables', { replace: true });
+            }
+        }
+    }, [isAuthenticated, user, navigate]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

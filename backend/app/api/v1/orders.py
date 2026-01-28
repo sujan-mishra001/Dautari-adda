@@ -9,7 +9,7 @@ from datetime import datetime
 
 from app.database import get_db
 from app.dependencies import get_current_user
-from app.models import Order, OrderItem, KOT, KOTItem, Table, Customer
+from app.models import Order, OrderItem, KOT, KOTItem, Table, Customer, POSSession
 from app.schemas import OrderResponse
 
 router = APIRouter()
@@ -196,6 +196,19 @@ async def update_order(
                     customer.total_spent += order.net_amount
                     customer.due_amount += order.credit_amount
                     customer.updated_at = datetime.now()
+            
+            # Update active POS Session for the current user
+            if current_user:
+                active_session = db.query(POSSession).filter(
+                    POSSession.user_id == current_user.id,
+                    POSSession.status == "Active"
+                ).first()
+                
+                if active_session:
+                    # Update session stats
+                    active_session.total_sales += order.net_amount
+                    active_session.total_orders += 1
+                    active_session.updated_at = datetime.now()
                     
         elif new_status == 'Cancelled':
             # Optionally mark KOTs as Cancelled too? The user didn't ask, but it makes sense.

@@ -29,3 +29,4 @@ class User(Base):
     organization = relationship("Organization", back_populates="users", foreign_keys=[organization_id])
     owned_organization = relationship("Organization", back_populates="owner", foreign_keys="Organization.owner_id", uselist=False)
     branch_assignments = relationship("UserBranchAssignment", back_populates="user", cascade="all, delete-orphan")
+    pos_sessions = relationship("POSSession", back_populates="user")

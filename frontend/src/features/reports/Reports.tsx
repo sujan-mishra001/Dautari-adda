@@ -19,10 +19,12 @@ import {
     Calendar
 } from 'lucide-react';
 import { reportsAPI } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const Reports: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [summary, setSummary] = useState<any>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchSummary = async () => {
@@ -44,10 +46,24 @@ const Reports: React.FC = () => {
         { name: 'Inventory Consumption', icon: <ShoppingCart />, description: 'Track stock usage and low inventory items', type: 'inventory' },
         { name: 'Customer Analytics', icon: <BarChart3 />, description: 'Visit frequency and total spending by customer', type: 'customers' },
         { name: 'Staff Performance', icon: <FileText />, description: 'Orders processed and items served per staff', type: 'staff' },
+        { name: 'Session Report', icon: <Calendar />, description: 'View all POS sessions, sales, and staff activity', type: 'sessions', navigateTo: '/reports/sessions' },
     ];
 
     const handleExport = async (type: string, format: 'pdf' | 'excel') => {
         try {
+            // Special handling for sessions PDF export
+            if (type === 'sessions' && format === 'pdf') {
+                const res = await reportsAPI.exportSessionsPDF();
+                const url = window.URL.createObjectURL(new Blob([res.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'session_report.pdf');
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                return;
+            }
+
             const res = format === 'pdf'
                 ? await reportsAPI.exportPDF(type, {})
                 : await reportsAPI.exportExcel(type, {});
@@ -88,8 +104,8 @@ const Reports: React.FC = () => {
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                                 <Avatar sx={{ bgcolor: '#fff7ed', color: '#FF8C00' }}><TrendingUp size={20} /></Avatar>
                             </Box>
-                            <Typography variant="h5" fontWeight={800}>Rs. {summary?.sales_today?.toLocaleString() || '0'}</Typography>
-                            <Typography variant="body2" color="text.secondary">Sales Today</Typography>
+                            <Typography variant="h5" fontWeight={800}>Rs. {summary?.sales_24h?.toLocaleString() || '0'}</Typography>
+                            <Typography variant="body2" color="text.secondary">Sales (24 Hours)</Typography>
                         </CardContent>
                     </Card>
                 </Grid>
@@ -99,8 +115,8 @@ const Reports: React.FC = () => {
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                                 <Avatar sx={{ bgcolor: '#eff6ff', color: '#3b82f6' }}><ShoppingCart size={20} /></Avatar>
                             </Box>
-                            <Typography variant="h5" fontWeight={800}>{summary?.orders_today || '0'}</Typography>
-                            <Typography variant="body2" color="text.secondary">Total Orders</Typography>
+                            <Typography variant="h5" fontWeight={800}>{summary?.orders_24h || '0'}</Typography>
+                            <Typography variant="body2" color="text.secondary">Total Orders (24h)</Typography>
                         </CardContent>
                     </Card>
                 </Grid>
@@ -116,7 +132,16 @@ const Reports: React.FC = () => {
                                     {report.icon}
                                 </Box>
                                 <Box sx={{ flexGrow: 1 }}>
-                                    <Typography fontWeight={700}>{report.name}</Typography>
+                                    <Typography
+                                        fontWeight={700}
+                                        sx={{
+                                            cursor: report.navigateTo ? 'pointer' : 'default',
+                                            '&:hover': report.navigateTo ? { color: '#FF8C00' } : {}
+                                        }}
+                                        onClick={() => report.navigateTo && navigate(report.navigateTo)}
+                                    >
+                                        {report.name}
+                                    </Typography>
                                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{report.description}</Typography>
                                     <Box sx={{ display: 'flex', gap: 2 }}>
                                         <Button

@@ -16,6 +16,7 @@ from app.models.orders import Floor, Table, Session, Order, OrderItem, KOT, KOTI
 from app.models.purchase import Supplier, PurchaseBill, PurchaseReturn
 from app.models.delivery import DeliveryPartner
 from app.models.settings import CompanySettings, PaymentMode, StorageArea, DiscountRule
+from app.models.pos_session import POSSession
 
 __all__ = [
     # Auth
@@ -42,6 +43,7 @@ __all__ = [
     "Floor",
     "Table",
     "Session",
+    "POSSession",  # <--- Added
     "Order",
     "OrderItem",
     "KOT",

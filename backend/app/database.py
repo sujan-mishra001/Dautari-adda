@@ -84,7 +84,8 @@ def init_db():
         UnitOfMeasurement, Product, InventoryTransaction,
         Supplier, PurchaseBill, PurchaseReturn,
         Table, Session, Order, OrderItem, KOT,
-        DeliveryPartner, BillOfMaterials, BOMItem, BatchProduction
+        DeliveryPartner, BillOfMaterials, BOMItem, BatchProduction,
+        POSSession
     )
     
     # Create database if it doesn't exist (PostgreSQL only)

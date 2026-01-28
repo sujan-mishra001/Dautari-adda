@@ -4,6 +4,7 @@ Pydantic schemas for request/response validation
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
+from .pos_session import *
 
 
 # ============ Auth Schemas ============
@@ -457,4 +458,3 @@ class RoleResponse(RoleBase):
 
     class Config:
         from_attributes = True
-

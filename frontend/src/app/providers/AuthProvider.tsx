@@ -3,6 +3,7 @@ import { authAPI } from '../../services/api';
 import { sessionManager } from '../../utils/sessionManager';
 
 interface User {
+    id?: number;
     username: string;
     role: string;
     full_name?: string;
@@ -11,6 +12,7 @@ interface User {
     current_branch_id?: number;
     is_organization_owner?: boolean;
 }
+
 
 interface AuthContextType {
     user: User | null;
@@ -28,6 +30,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [token, setToken] = useState<string | null>(sessionManager.getToken());
     const [loading, setLoading] = useState(true);
 
+    const logout = () => {
+        sessionManager.clearSession();
+        setToken(null);
+        setUser(null);
+    };
+
+    const isSessionValid = () => {
+        return sessionManager.isSessionValid();
+    };
+
     useEffect(() => {
         // Set up session expiration handler
         sessionManager.onExpired(() => {
@@ -41,6 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 try {
                     const response = await authAPI.getCurrentUser();
                     setUser({
+                        id: response.data.id,
                         username: response.data.username,
                         role: response.data.role,
                         full_name: response.data.full_name,
@@ -72,6 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             const response = await authAPI.getCurrentUser(newToken);
             const userData = {
+                id: response.data.id,
                 username: response.data.username,
                 role: response.data.role,
                 full_name: response.data.full_name,
@@ -97,16 +111,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    const logout = () => {
-        sessionManager.clearSession();
-        setToken(null);
-        setUser(null);
-    };
-
-    const isSessionValid = () => {
-        return sessionManager.isSessionValid();
-    };
-
     return (
         <AuthContext.Provider
             value={{
@@ -122,6 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         </AuthContext.Provider>
     );
 };
+
 
 export const useAuth = () => {
     const context = useContext(AuthContext);

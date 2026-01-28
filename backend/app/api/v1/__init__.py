@@ -9,7 +9,7 @@ api_router = APIRouter()
 try:
     from app.api.v1 import (
         users, customers, menu, inventory, purchase, orders, reports, 
-        delivery, tables, kots, settings, organizations, branches, roles, floors
+        delivery, tables, kots, settings, organizations, branches, roles, floors, sessions
     )
     
     # Include all route modules (auth is included separately in main.py for root-level access)
@@ -21,6 +21,7 @@ try:
     api_router.include_router(users.router, prefix="/users", tags=["Users"])
     api_router.include_router(customers.router, prefix="/customers", tags=["Customers"])
     api_router.include_router(roles.router, tags=["Roles & Permissions"])
+    api_router.include_router(sessions.router, prefix="/sessions", tags=["Staff Sessions"])
     
     # Menu & inventory routes
     api_router.include_router(menu.router, prefix="/menu", tags=["Menu"])

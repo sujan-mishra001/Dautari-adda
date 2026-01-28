@@ -4,6 +4,7 @@ Main FastAPI application
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+# Force reload for route registration
 from app.config import settings
 from app.database import init_db, get_db
 from app.dependencies import get_password_hash
